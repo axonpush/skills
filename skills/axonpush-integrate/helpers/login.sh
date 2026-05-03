@@ -147,6 +147,7 @@ else
   start_nc_listener
 fi
 
+# shellcheck disable=SC2317  # invoked via `trap`
 cleanup() {
   if [[ -n "$LISTENER_PID" ]] && kill -0 "$LISTENER_PID" 2>/dev/null; then
     kill "$LISTENER_PID" 2>/dev/null || true

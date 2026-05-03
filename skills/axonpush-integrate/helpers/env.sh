@@ -87,8 +87,8 @@ for arg in "$@"; do
   done
 
   if (( found_idx >= 0 )); then
-    if [[ "${lines[$found_idx]}" != "$new_line" ]]; then
-      lines[$found_idx]="$new_line"
+    if [[ "${lines[found_idx]}" != "$new_line" ]]; then
+      lines[found_idx]="$new_line"
       changed=1
     fi
   else
