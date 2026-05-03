@@ -1,7 +1,16 @@
 ---
 name: anthropic
-description: Integrate AxonPush tracing into a project using the Anthropic Python SDK
+description: Wire AxonPush tracing into a Python project that calls the Anthropic SDK (`anthropic` package, `client.messages.create`). Use when the user wants to observe Claude conversations, tool use, and tool results from a Python service.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + Anthropic/Claude Integration
 

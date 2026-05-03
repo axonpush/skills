@@ -1,7 +1,16 @@
 ---
 name: ts-langgraph
-description: Integrate AxonPush tracing into a TypeScript LangGraph project
+description: Wire AxonPush tracing into a TypeScript LangGraph.js project via `AxonPushLangGraphHandler`, including per-node graph events on top of the standard chain/LLM/tool lifecycle. Use when the user wants graph node-level observability.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + LangGraph (TypeScript) Integration
 

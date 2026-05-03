@@ -1,7 +1,16 @@
 ---
 name: custom
-description: Integrate AxonPush event publishing directly for custom or unsupported frameworks
+description: Wire direct AxonPush event publishing into a Python project that does not use a supported framework. Use when no specific framework integration applies and the user wants to emit custom events with `client.events.publish()`.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush Custom Framework Integration
 

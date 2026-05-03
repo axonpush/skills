@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint helpers and SKILL.md frontmatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck and yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          sudo wget -qO /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      - name: Shellcheck helpers
+        run: |
+          shopt -s nullglob
+          files=(skills/axonpush-integrate/helpers/*.sh)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No helper scripts found yet — skipping shellcheck."
+            exit 0
+          fi
+          shellcheck "${files[@]}"
+
+      - name: Lint SKILL.md frontmatter
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r -d '' f; do
+            name=$(yq e '.name' "$f" 2>/dev/null || true)
+            desc=$(yq e '.description' "$f" 2>/dev/null || true)
+            if [ -z "$name" ] || [ "$name" = "null" ]; then
+              echo "::error file=$f::missing or empty 'name' in frontmatter"
+              status=1
+            fi
+            if [ -z "$desc" ] || [ "$desc" = "null" ]; then
+              echo "::error file=$f::missing or empty 'description' in frontmatter"
+              status=1
+            fi
+            dir=$(basename "$(dirname "$f")")
+            if [ "$name" != "$dir" ]; then
+              echo "::error file=$f::frontmatter name '$name' does not match directory '$dir'"
+              status=1
+            fi
+          done < <(find skills -name SKILL.md -print0)
+          exit $status

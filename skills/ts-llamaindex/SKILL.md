@@ -1,7 +1,16 @@
 ---
 name: ts-llamaindex
-description: Integrate AxonPush tracing into a TypeScript LlamaIndex project
+description: Wire AxonPush tracing into a TypeScript LlamaIndex.ts project via `AxonPushLlamaIndexHandler`. Use when the user wants LLM, embedding, retriever, and query lifecycle events from a query engine or retrieval pipeline.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + LlamaIndex (TypeScript) Integration
 

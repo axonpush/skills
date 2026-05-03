@@ -1,0 +1,37 @@
+{
+  "name": "axonpush",
+  "owner": {
+    "name": "AxonPush",
+    "email": "support@axonpush.xyz",
+    "url": "https://axonpush.xyz"
+  },
+  "metadata": {
+    "description": "AxonPush observability skills for AI agent frameworks.",
+    "version": "0.0.1"
+  },
+  "plugins": [
+    {
+      "name": "axonpush",
+      "source": {
+        "source": "github",
+        "repo": "axonpush/skills"
+      },
+      "description": "Integrate AxonPush tracing into projects built on LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, Deep Agents, OpenTelemetry, or custom frameworks.",
+      "version": "0.0.1",
+      "category": "observability",
+      "keywords": [
+        "axonpush",
+        "observability",
+        "tracing",
+        "ai-agents",
+        "langchain",
+        "crewai",
+        "anthropic",
+        "openai-agents",
+        "vercel-ai",
+        "mastra",
+        "opentelemetry"
+      ]
+    }
+  ]
+}

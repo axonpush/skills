@@ -1,7 +1,16 @@
 ---
 name: otel-ts
-description: Wire AxonPushSpanExporter into a TypeScript/Node project's OpenTelemetry TracerProvider
+description: Attach `AxonPushSpanExporter` to a TypeScript/Node project's OpenTelemetry `TracerProvider` so every OTel span is forwarded to AxonPush. Use for any Node service already instrumented with OpenTelemetry that wants its spans mirrored to AxonPush.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + OpenTelemetry (TypeScript) Integration
 

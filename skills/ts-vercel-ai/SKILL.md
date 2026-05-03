@@ -1,7 +1,16 @@
 ---
 name: ts-vercel-ai
-description: Integrate AxonPush tracing into a Vercel AI SDK project
+description: Wire AxonPush tracing into a TypeScript project that uses the Vercel AI SDK (`ai` package, `generateText` / `streamText`) via `axonPushMiddleware`. Use when the user wants LLM call and streaming-token events from a Vercel AI workflow.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + Vercel AI SDK Integration
 

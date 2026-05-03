@@ -1,7 +1,16 @@
 ---
 name: openai-agents
-description: Integrate AxonPush tracing into a project using the OpenAI Agents SDK
+description: Wire AxonPush tracing into a Python project that uses the OpenAI Agents SDK (`Runner.run`). Async-only; uses `AsyncAxonPush`. Use when the user wants agent run, tool, and handoff events.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + OpenAI Agents SDK Integration
 

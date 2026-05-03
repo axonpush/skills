@@ -1,7 +1,16 @@
 ---
 name: deepagents
-description: Integrate AxonPush tracing into a LangChain Deep Agents project
+description: Wire AxonPush tracing into a Python project using LangChain Deep Agents (`deepagents` package, `create_deep_agent`). Use when the user wants planning, subagent, filesystem, sandbox, and tool lifecycle events from a deep-agent workflow.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + Deep Agents Integration
 

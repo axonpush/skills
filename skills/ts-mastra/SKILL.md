@@ -1,7 +1,16 @@
 ---
 name: ts-mastra
-description: Integrate AxonPush tracing into a Mastra project
+description: Wire AxonPush tracing into a TypeScript Mastra project via `AxonPushMastraHooks`. Use when the user wants tool and workflow lifecycle events (start, end, error) from a Mastra workflow or agent.
 ---
+
+## Reference (live)
+
+Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+
+- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+
+Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
 # AxonPush + Mastra Integration
 
