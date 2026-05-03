@@ -1,0 +1,28 @@
+{
+  "name": "axonpush",
+  "version": "0.0.1",
+  "description": "AxonPush observability SDK integration skills. Detects your AI agent framework (LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, OTel) and wires AxonPush tracing into your project end-to-end.",
+  "author": {
+    "name": "AxonPush",
+    "url": "https://axonpush.xyz"
+  },
+  "homepage": "https://github.com/axonpush/skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axonpush/skills.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "axonpush",
+    "observability",
+    "tracing",
+    "ai-agents",
+    "langchain",
+    "crewai",
+    "openai-agents",
+    "anthropic",
+    "vercel-ai",
+    "mastra",
+    "opentelemetry"
+  ]
+}
