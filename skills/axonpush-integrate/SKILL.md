@@ -247,7 +247,7 @@ Then poll for the event:
 ```bash
 sleep 1
 RECEIVED=$(bash skills/axonpush-integrate/helpers/api.sh list-events "$PRIMARY_CHANNEL_ID" 5 \
-  | jq --arg id "$TEST_ID" '[.events[]? // .[]?] | map(select(.identifier == $id)) | length')
+  | jq --arg id "$TEST_ID" '[.data[]?] | map(select(.identifier == $id)) | length')
 ```
 
 If `RECEIVED >= 1`: print "**Test event landed.** Channel `$PRIMARY_CHANNEL_NAME` received `$TEST_ID`." Then tell the user where to view it: `https://app.axonpush.xyz/apps/<appId>/channels/<channelName>`.
@@ -287,7 +287,7 @@ These apply at every step. Violating them is a regression.
 5. **Add AxonPush imports at the top of the file** alongside other imports — not scattered mid-function.
 6. **Create the AxonPush client as a module-level singleton**, not inside each function call.
 7. **Centralize AxonPush configuration** in a dedicated module (e.g. `axonpush_config.py` for Python, `lib/axonpush.ts` for TS). Other modules import from that single source. Never scatter `os.environ['AXONPUSH_...']` lookups across files.
-8. **Use `int(os.environ['AXONPUSH_CHANNEL_ID'])` (Python) or `Number(process.env.AXONPUSH_CHANNEL_ID)` (TS).** Never hardcode channel IDs.
+8. **Channel ids are UUID strings.** Read `os.environ['AXONPUSH_CHANNEL_ID']` (Python) / `process.env.AXONPUSH_CHANNEL_ID` (TS) directly — do not cast to `int` or `Number`. Never hardcode channel ids.
 9. **Use the detected package manager** from step 1 for installs (`uv add`, `poetry add`, `pip install`, `bun add`, `pnpm add`, `npm install`, `yarn add`). Do not switch the user's package manager.
 10. **For async Python frameworks** (OpenAI Agents, async LangChain), use `AsyncAxonPush` with `async with AsyncAxonPush(...) as client:`.
 11. **If a `TracerProvider` already exists** in the project (OTel users), attach `AxonPushSpanExporter` to that provider. Never register a second global provider.
