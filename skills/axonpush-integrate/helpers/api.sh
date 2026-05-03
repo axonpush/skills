@@ -5,6 +5,8 @@
 #   bash api.sh create-app <name>
 #   bash api.sh list-app <appId>
 #   bash api.sh create-channel <name> <appId>
+#   bash api.sh publish-event <channelId> <identifier> <payloadJSON>
+#   bash api.sh list-events <channelId> [limit]
 #
 # Reads from env:
 #   AXONPUSH_API_KEY    (required)
@@ -39,9 +41,11 @@ api.sh — AxonPush REST client.
 
 Commands:
   list-apps
-  create-app <name>
+  create-app <name>                                      (name min 5 chars)
   list-app <appId>
-  create-channel <name> <appId>
+  create-channel <name> <appId>                          (name min 5 chars)
+  publish-event <channelId> <identifier> <payloadJSON>
+  list-events <channelId> [limit]                        (default limit=10)
 
 Env: AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL (default https://api.axonpush.xyz)
 EOF
@@ -94,23 +98,52 @@ case "$cmd" in
   create-app)
     name="${1:-}"
     [[ -z "$name" ]] && { echo "api.sh: create-app <name>" >&2; exit 2; }
+    if (( ${#name} < 5 )); then
+      echo "api.sh: app name must be at least 5 characters (got ${#name}: '$name')" >&2
+      exit 2
+    fi
     req POST /apps "$(jq -n --arg name "$name" '{name: $name}')"
     ;;
   list-app)
     app_id="${1:-}"
     [[ -z "$app_id" ]] && { echo "api.sh: list-app <appId>" >&2; exit 2; }
     apps=$(req GET /apps)
-    match=$(echo "$apps" | jq --argjson id "$app_id" 'map(select((.id|tonumber) == $id)) | .[0] // empty')
+    # App identifiers are UUID strings — match against both .id and .appId.
+    match=$(echo "$apps" | jq --arg id "$app_id" 'map(select(.id == $id or .appId == $id)) | .[0] // empty')
     if [[ -z "$match" || "$match" == "null" ]]; then
       echo "api.sh: app not found: $app_id" >&2
       exit 1
     fi
-    echo "$match"
+    # GET /apps/<id> includes channels[]; fetch by .id (UUID) for accuracy.
+    real_id=$(echo "$match" | jq -r '.id')
+    req GET "/apps/${real_id}"
     ;;
   create-channel)
     name="${1:-}"; app_id="${2:-}"
     [[ -z "$name" || -z "$app_id" ]] && { echo "api.sh: create-channel <name> <appId>" >&2; exit 2; }
-    req POST /channel "$(jq -n --arg name "$name" --argjson appId "$app_id" '{name: $name, appId: $appId}')"
+    if (( ${#name} < 5 )); then
+      echo "api.sh: channel name must be at least 5 characters (got ${#name}: '$name')" >&2
+      exit 2
+    fi
+    # Backend DTO requires appId as a string — use --arg, not --argjson.
+    req POST /channel "$(jq -n --arg name "$name" --arg appId "$app_id" '{name: $name, appId: $appId}')"
+    ;;
+  publish-event)
+    channel_id="${1:-}"; identifier="${2:-}"; payload="${3:-}"
+    [[ -z "$channel_id" || -z "$identifier" || -z "$payload" ]] && {
+      echo "api.sh: publish-event <channelId> <identifier> <payloadJSON>" >&2; exit 2;
+    }
+    # Sanity-check payload is valid JSON before sending.
+    if ! echo "$payload" | jq -e . >/dev/null 2>&1; then
+      echo "api.sh: payload must be valid JSON" >&2; exit 2;
+    fi
+    req POST /event "$(jq -n --arg id "$identifier" --arg ch "$channel_id" --argjson p "$payload" \
+      '{identifier: $id, channel_id: $ch, payload: $p, eventType: "custom"}')"
+    ;;
+  list-events)
+    channel_id="${1:-}"; limit="${2:-10}"
+    [[ -z "$channel_id" ]] && { echo "api.sh: list-events <channelId> [limit]" >&2; exit 2; }
+    req GET "/event/${channel_id}/list?limit=${limit}"
     ;;
   *)
     echo "api.sh: unknown command '$cmd'" >&2
