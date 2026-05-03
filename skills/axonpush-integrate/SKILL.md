@@ -43,44 +43,50 @@ If `language == "both"`, ask the user: "Both Python and TypeScript detected. Whi
 
 If `language == "unknown"`, ask the user: "Could not detect project language. Which SDK? Options: python, typescript."
 
-## Step 2 — Confirm Framework
+## Step 2 — Pick Integrations (multi-select)
 
-Use this lookup table to map detected frameworks to the sub-skill that will handle them:
+A project usually wants more than one integration: an agent framework AND a log forwarder, or multiple agent frameworks side by side, or just logging without any agent framework. This step builds a list of sub-skills to invoke; **the user can pick as many as apply.**
 
-**Python (`language == "python"`):**
+Two integration families:
 
-| Framework key | Sub-skill name |
+**A) Agent-framework integrations** — instrument LLM calls, agent runs, tool invocations.
+
+| Detected key | Python sub-skill | TypeScript sub-skill |
+|---|---|---|
+| `anthropic` | `anthropic` | `ts-anthropic` |
+| `crewai` | `crewai` | — |
+| `langchain` | `langchain` | `ts-langchain` |
+| `langgraph` | — | `ts-langgraph` |
+| `llamaindex` | — | `ts-llamaindex` |
+| `mastra` | — | `ts-mastra` |
+| `openai-agents` | `openai-agents` | `ts-openai-agents` |
+| `vercel-ai` | — | `ts-vercel-ai` |
+| `google-adk` | — | `ts-google-adk` |
+| `deepagents` | `deepagents` | — |
+| `otel` (OpenTelemetry) | `otel-python` | `otel-ts` |
+| (none of the above, raw event publish) | `custom` | `ts-custom` |
+
+**B) Log-forwarder integrations** — funnel existing log calls into AxonPush as `eventType: "log"` events.
+
+| Detected log lib | Sub-skill |
 |---|---|
-| `anthropic` | `anthropic` |
-| `crewai` | `crewai` |
-| `langchain` | `langchain` |
-| `openai-agents` | `openai-agents` |
-| `deepagents` | `deepagents` |
-| `otel` | `otel-python` |
-| (none / other) | `custom` |
-
-**TypeScript (`language == "typescript"`):**
-
-| Framework key | Sub-skill name |
-|---|---|
-| `anthropic` | `ts-anthropic` |
-| `langchain` | `ts-langchain` |
-| `langgraph` | `ts-langgraph` |
-| `llamaindex` | `ts-llamaindex` |
-| `mastra` | `ts-mastra` |
-| `openai-agents` | `ts-openai-agents` |
-| `vercel-ai` | `ts-vercel-ai` |
-| `google-adk` | `ts-google-adk` |
-| `otel` | `otel-ts` |
-| (none / other) | `ts-custom` |
+| Python `logging` (stdlib, also covers Django) | `logging` |
+| Python `loguru` | `loguru` |
+| Python `structlog` | `structlog` |
+| Node `pino` | `pino` |
+| Node `winston` | `winston` |
+| Node `console` (fallback when no other lib) | `console` |
 
 Behaviour:
 
-- If `frameworks[]` has exactly one entry, ask the user: "Detected `<framework>`. Integrate AxonPush with this framework? Options: yes, pick a different one."
-- If `frameworks[]` has multiple entries, ask: "Multiple frameworks detected. Which one to integrate? Options: <list of detected frameworks>, other."
-- If `frameworks[]` is empty, ask: "No supported framework detected. Pick one to integrate, or use `custom` for direct event publishing. Options: <full list of framework keys for the chosen language>."
+1. Build `RECOMMENDED[]` from `detect.sh` output:
+   - For each entry in `frameworks[]`, look up the matching agent sub-skill for `language`.
+   - For each entry in `logLibraries[]`, look up the matching log sub-skill.
+   - Drop any unmapped (e.g. `console` is only in TS, `logging` only in Python).
+2. Show the user the recommended list and the full menu of unmapped options. Ask: **"Which integrations should I wire up? Pick all that apply."** Default-select the recommended ones.
+3. If the user picks none and `frameworks[]` was empty, default to `custom` (Python) or `ts-custom` (TypeScript) so they at least get raw event publishing.
 
-Resolve the user's choice to a sub-skill name via the table. Hold this as `SUB_SKILL`.
+Hold the user's selection as `INTEGRATIONS=()` (bash-style array of sub-skill names). Order: agent frameworks first, log forwarders last (so the project boots logging after the agent client exists).
 
 ## Step 3 — Resolve Credentials
 
@@ -128,48 +134,78 @@ export AXONPUSH_TENANT_ID="$TENANT_ID"
 [ -n "${BASE_URL:-}" ] && export AXONPUSH_BASE_URL="$BASE_URL"
 ```
 
+**Naming constraints (enforced by the backend, fail before you call):**
+
+- Both app names and channel names must be **at least 5 characters**. Reject short names up front rather than letting the API return a 400.
+- App names should be project-scoped (e.g. `acme-prod-api`, not `app1`). Channel names should describe what flows through them (`agent-events`, `app-logs`, `webhooks-in`).
+
 ### 4a — App
 
 ```bash
 bash skills/axonpush-integrate/helpers/api.sh list-apps
 ```
 
-Output is a JSON array of `{id, name, channels: [...]}`.
+Output is a JSON array of `{id, appId, name, ...}`.
 
-- If empty, ask the user: "No AxonPush apps yet. What should the new app be called?" Default to the project directory name. Then run:
+- If empty, ask the user: "No AxonPush apps yet. Name the new app (min 5 chars)." Default suggestion: the project directory name (sanitize to lowercase + hyphens; pad if under 5 chars). Then run:
   ```bash
   bash skills/axonpush-integrate/helpers/api.sh create-app "<name>"
   ```
   Output is the new app object. Hold `id` as `APP_ID`.
-- If non-empty, list app names and ask: "Which app should this project use? Options: <names>, create a new one." If they pick existing, hold its `id` as `APP_ID`. If they pick "create new", run the create-app flow above.
+- If non-empty, list app names and ask: "Which app should this project use? Options: <names>, or create a new one." If they pick existing, hold its `id` as `APP_ID`. If they pick "create new", run the create-app flow above.
 
-### 4b — Channel
+### 4b — Channels (multi-channel: ask for all upfront)
 
-Once `APP_ID` is held, list channels:
+Once `APP_ID` is held, fetch the app's existing channels:
 
 ```bash
 bash skills/axonpush-integrate/helpers/api.sh list-app "$APP_ID"
 ```
 
-Output includes `channels: [...]` for that app.
+Output is the full app object with `channels: [...]` populated.
 
-- If empty, ask: "No channels yet for `<app name>`. What should the new channel be called?" Default `default`. Then:
-  ```bash
-  bash skills/axonpush-integrate/helpers/api.sh create-channel "<name>" "$APP_ID"
-  ```
-  Hold the new channel's `id` as `CHANNEL_ID`.
-- If non-empty, ask: "Which channel? Options: <channel names>, create a new one." Hold the chosen `id` as `CHANNEL_ID`, or create.
+Now decide which channels this project needs. **A project usually wants more than one channel** — common pattern: one per logical event stream so subscribers can filter cheaply. Suggest sensible defaults based on the integrations the user picked in step 2:
+
+| Picked integrations | Suggested channel(s) |
+|---|---|
+| Any agent framework (langchain, crewai, anthropic, etc.) | `agent-events` |
+| Any log forwarder (logging, loguru, pino, winston, console, structlog) | `app-logs` |
+| `otel-python` / `otel-ts` | `otel-traces` |
+| Webhooks/external events expected | `webhooks-in` |
+| User explicitly wants just one | `default-channel` |
+
+Behaviour:
+
+1. From the suggestion table, build `SUGGESTED_CHANNELS=()` based on the user's `INTEGRATIONS[]` selection. De-duplicate.
+2. Show the user the suggested list AND the channels that already exist on this app. Ask: **"Which channels should I create or reuse? Edit the list to add/remove. Each name must be at least 5 characters."**
+3. For each channel in the user's final list:
+   - If it already exists in `channels[]`, reuse its `id`.
+   - Otherwise call:
+     ```bash
+     bash skills/axonpush-integrate/helpers/api.sh create-channel "<name>" "$APP_ID"
+     ```
+     Hold the new channel's `id`.
+4. Build `CHANNEL_IDS=()` (the array of all channel ids the user picked) and `CHANNEL_NAMES=()` in matching order.
+5. **Pick the primary channel**: if the user picked exactly one, that's it. If multiple, prefer (in order) `agent-events` → `default-channel` → first in the list. Hold as `PRIMARY_CHANNEL_ID` and `PRIMARY_CHANNEL_NAME`. The primary is what `AXONPUSH_CHANNEL_ID` in `.env` points to; sub-skills publish to it by default.
 
 ## Step 5 — Write `.env`
 
-Write all five values idempotently:
+Write the credentials and channel ids idempotently. The primary channel id is what the SDK reads by default; the secondary `AXONPUSH_CHANNELS` map lets advanced code address other channels by name without hardcoding ids.
 
 ```bash
+# Build the AXONPUSH_CHANNELS map: "name1:id1,name2:id2,..."
+CHANNELS_MAP=""
+for i in "${!CHANNEL_IDS[@]}"; do
+  [[ -n "$CHANNELS_MAP" ]] && CHANNELS_MAP+=","
+  CHANNELS_MAP+="${CHANNEL_NAMES[$i]}:${CHANNEL_IDS[$i]}"
+done
+
 bash skills/axonpush-integrate/helpers/env.sh \
   AXONPUSH_API_KEY="$API_KEY" \
   AXONPUSH_TENANT_ID="$TENANT_ID" \
   AXONPUSH_APP_ID="$APP_ID" \
-  AXONPUSH_CHANNEL_ID="$CHANNEL_ID" \
+  AXONPUSH_CHANNEL_ID="$PRIMARY_CHANNEL_ID" \
+  AXONPUSH_CHANNELS="$CHANNELS_MAP" \
   AXONPUSH_BASE_URL="${BASE_URL:-https://api.axonpush.xyz}"
 ```
 
@@ -177,45 +213,68 @@ The helper appends missing keys and updates existing ones in place; it picks `.e
 
 If a `.gitignore` exists and does not already ignore `.env*`, append the relevant lines. Do not commit anything.
 
-## Step 6 — Delegate to the Framework Sub-Skill
+## Step 6 — Delegate to Each Sub-Skill in Order
 
-Invoke `SUB_SKILL` (resolved in step 2). On Claude Code that means using the Skill tool with the sub-skill's name. On other hosts, read the file `skills/<SUB_SKILL>/SKILL.md` from the plugin install directory and follow its instructions verbatim against the user's project.
+Loop over `INTEGRATIONS[]` from step 2. Invoke each sub-skill once. On Claude Code that means using the Skill tool with the sub-skill's name. On other hosts, read `skills/<name>/SKILL.md` from the plugin install directory and follow its instructions against the user's project.
 
-Pass the following context into the sub-skill's execution (state them out loud at the top of its run so the model can use them):
+Pass this context into every sub-skill's execution (state it out loud at the top of each run):
 
 - `language` (python or typescript)
 - `packageManager` (from step 1)
 - `logLibraries[]` (from step 1)
-- `APP_ID`, `CHANNEL_ID` (from step 4)
-- The fact that `.env` is already written (no need to re-prompt for creds)
+- `APP_ID`, `PRIMARY_CHANNEL_ID`, `PRIMARY_CHANNEL_NAME` (from step 4)
+- `CHANNEL_IDS[]`, `CHANNEL_NAMES[]` for projects publishing to multiple channels
+- The fact that `.env` is already written
 
-Do not duplicate work the sub-skill will do (package install, code edits). Your job ends once the sub-skill completes.
+If a sub-skill fails (e.g. requires a package not installable in the user's lockfile), report the failure, skip it, and continue with the rest. Don't abort the whole orchestrator.
 
-## Step 7 — Verify
+## Step 7 — Verify with a real test event
 
-After the sub-skill returns, print a one-liner the user can run to emit a test event. Pick by language:
+After all sub-skills finish, prove the wiring end-to-end by **publishing a real test event via the API** and **reading it back** to confirm receipt. Do not just print a command for the user — run it yourself.
+
+```bash
+TEST_ID="skill-test-$(date +%s)"
+bash skills/axonpush-integrate/helpers/api.sh publish-event \
+  "$PRIMARY_CHANNEL_ID" \
+  "$TEST_ID" \
+  '{"ok": true, "source": "axonpush-integrate skill"}'
+```
+
+Capture the response. The publish should return a `2xx` and a JSON body with the event's stored shape.
+
+Then poll for the event:
+
+```bash
+sleep 1
+RECEIVED=$(bash skills/axonpush-integrate/helpers/api.sh list-events "$PRIMARY_CHANNEL_ID" 5 \
+  | jq --arg id "$TEST_ID" '[.events[]? // .[]?] | map(select(.identifier == $id)) | length')
+```
+
+If `RECEIVED >= 1`: print "**Test event landed.** Channel `$PRIMARY_CHANNEL_NAME` received `$TEST_ID`." Then tell the user where to view it: `https://app.axonpush.xyz/apps/<appId>/channels/<channelName>`.
+
+If `RECEIVED == 0`: try once more with `sleep 3` (backend ingest can take a moment under cold start). If still zero, surface this as a failure with the publish response body — likely a credential or quota issue, and the user needs to know now (not after they've shipped to prod).
+
+Then offer the language-specific one-liner so the user can verify from their own code path:
 
 **Python:**
 
 ```bash
-python -c "import os; from axonpush import AxonPush; AxonPush(api_key=os.environ['AXONPUSH_API_KEY'], tenant_id=os.environ['AXONPUSH_TENANT_ID']).events.publish(channel_id=int(os.environ['AXONPUSH_CHANNEL_ID']), identifier='test', payload={'ok': True})"
+python -c "import os; from axonpush import AxonPush; AxonPush().events.publish(channel_id=os.environ['AXONPUSH_CHANNEL_ID'], identifier='from-my-code', payload={'ok': True})"
 ```
 
 **TypeScript (Node):**
 
 ```bash
-node -e "import('@axonpush/sdk').then(({AxonPush}) => new AxonPush({apiKey: process.env.AXONPUSH_API_KEY, tenantId: process.env.AXONPUSH_TENANT_ID}).events.publish({channelId: Number(process.env.AXONPUSH_CHANNEL_ID), identifier: 'test', payload: {ok: true}}))"
+node -e "import('@axonpush/sdk').then(({AxonPush}) => new AxonPush().events.publish({channelId: process.env.AXONPUSH_CHANNEL_ID, identifier: 'from-my-code', payload: {ok: true}}))"
 ```
 
 **TypeScript (Bun):**
 
 ```bash
-bun -e "import {AxonPush} from '@axonpush/sdk'; await new AxonPush({apiKey: process.env.AXONPUSH_API_KEY, tenantId: process.env.AXONPUSH_TENANT_ID}).events.publish({channelId: Number(process.env.AXONPUSH_CHANNEL_ID), identifier: 'test', payload: {ok: true}})"
+bun -e "import {AxonPush} from '@axonpush/sdk'; await new AxonPush().events.publish({channelId: process.env.AXONPUSH_CHANNEL_ID, identifier: 'from-my-code', payload: {ok: true}})"
 ```
 
-Tell the user: "Run the above (after sourcing your `.env`), then watch https://app.axonpush.xyz for the `test` event on channel `<channel name>`. Then run your real agent and confirm traces appear."
-
-End with a brief summary (3–5 bullets) of what was changed and what to do next.
+End with a brief summary (3–5 bullets): which integrations were wired, which channels were created/reused, the test-event result, and what command the user should run next to exercise their real agent.
 
 ## Rules (non-negotiable)
 
