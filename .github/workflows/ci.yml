@@ -35,9 +35,25 @@ jobs:
         run: |
           set -euo pipefail
           status=0
+          # Extract the YAML frontmatter (lines between the first and second
+          # `---`) before passing to yq. Feeding the whole markdown file to
+          # yq trips its tokenizer on backtick-led lines or other non-YAML
+          # markdown content past the frontmatter.
+          extract_frontmatter() {
+            awk '
+              /^---[[:space:]]*$/ { n++; if (n == 2) exit; next }
+              n == 1 { print }
+            ' "$1"
+          }
           while IFS= read -r -d '' f; do
-            name=$(yq e '.name' "$f" 2>/dev/null || true)
-            desc=$(yq e '.description' "$f" 2>/dev/null || true)
+            fm=$(extract_frontmatter "$f")
+            if [ -z "$fm" ]; then
+              echo "::error file=$f::missing or empty YAML frontmatter (expected '---' delimiters)"
+              status=1
+              continue
+            fi
+            name=$(printf '%s\n' "$fm" | yq e '.name' - 2>/dev/null || true)
+            desc=$(printf '%s\n' "$fm" | yq e '.description' - 2>/dev/null || true)
             if [ -z "$name" ] || [ "$name" = "null" ]; then
               echo "::error file=$f::missing or empty 'name' in frontmatter"
               status=1
