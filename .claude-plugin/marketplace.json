@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "AxonPush observability skills for AI agent frameworks.",
-    "version": "0.0.1"
+    "version": "0.0.3"
   },
   "plugins": [
     {
@@ -17,7 +17,7 @@
         "repo": "axonpush/skills"
       },
       "description": "Integrate AxonPush tracing into projects built on LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, Deep Agents, OpenTelemetry, or custom frameworks.",
-      "version": "0.0.1",
+      "version": "0.0.3",
       "category": "observability",
       "keywords": [
         "axonpush",
