@@ -103,3 +103,15 @@ if isinstance(provider, TracerProvider):
 ## Fail-Open
 
 `AxonPush(fail_open=True)` is the default. If AxonPush is unreachable the exporter silently drops spans — no application impact.
+
+## Common Pitfalls
+
+### Environment slug must match a registered tenant environment
+
+If you set `AXONPUSH_ENVIRONMENT`, the value has to match a slug already registered for the tenant (visit the Environments page in the AxonPush dashboard). Passing your application's own env name (e.g. `"development"` or `"production"`) when the tenant only has `dev` / `staging` / `prod` configured causes the server to reject every publish. The SDK's background publisher logs this at ERROR (`axonpush publish rejected by server: ... [code=...]`); look there if events stop flowing after deploy.
+
+Either omit `AXONPUSH_ENVIRONMENT` (the server treats unset as the tenant default) or set it to one of the configured slugs.
+
+### Self-instrumentation amplification (resolved in axonpush ≥ 0.0.12)
+
+OTel's `HTTPXClientInstrumentor` previously created a span for every SDK publish, which the exporter would publish, generating another span, etc. The SDK now suppresses OTel instrumentation around its own httpx requests (sets the `suppress_instrumentation` and `suppress_http_instrumentation` context keys), so this is handled automatically — no `OTEL_PYTHON_HTTPX_EXCLUDED_URLS` workaround needed for axonpush ≥ 0.0.12.

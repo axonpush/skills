@@ -4,6 +4,32 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.3] – 2026-05-04
+
+### Fixed
+
+- `langchain` sub-skill now writes a per-call `axonpush_handler()`
+  factory that pulls the active OpenTelemetry span's `trace_id` (when
+  present) and binds the `AxonPushCallbackHandler` to it. The previous
+  module-level handler captured the trace_id of process startup, which
+  meant agent events never shared a trace with the FastAPI / Flask /
+  Django HTTP span the request lived inside. Cross-source correlation
+  in the AxonPush dashboard waterfall now just works when the
+  `otel-python` skill is installed alongside `langchain`.
+- `langchain` skill explicitly documents the per-call factory
+  invariant (`axonpush_handler()` not `axonpush_handler`) so the AI
+  agent rendering the integration doesn't pin to a single (invalid)
+  trace_id forever.
+
+### Documented
+
+- `otel-python` skill: new "Common Pitfalls" section calling out
+  AxonPush environment-slug validation (the server rejects publishes
+  whose env slug isn't registered for the tenant; SDK >= 0.0.12 logs
+  this at ERROR — old SDKs fail silently) and the now-resolved httpx
+  self-instrumentation amplification loop (no
+  `OTEL_PYTHON_HTTPX_EXCLUDED_URLS` workaround needed for SDK >= 0.0.12).
+
 ## [0.0.2] – 2026-05-03
 
 ### Added
