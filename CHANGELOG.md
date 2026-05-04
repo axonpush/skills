@@ -4,6 +4,31 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.4] – 2026-05-04
+
+### Changed
+
+- Renamed the marketplace from `axonpush` to `axonpush-plugins`. The
+  marketplace and the plugin it lists used to share the same name,
+  which made the install command read `/plugin install axonpush@axonpush`
+  — technically valid, visually confusing, and bit awkward if/when a
+  second plugin lands in the same catalog. The install command now
+  reads `/plugin install axonpush@axonpush-plugins`. `/plugin
+  marketplace add axonpush/skills` is unchanged (that points to the
+  GitHub repo, not the marketplace `name`).
+- Removed the duplicate `version` field from the `marketplace.json`
+  plugin entry. Per Claude Code's docs, `plugin.json` `version` always
+  silently wins when both are set, which means a stale duplicate in
+  `marketplace.json` can mask the real version. Single source of truth
+  is now `plugin.json`.
+
+### Fixed
+
+- README install snippet replaced with the canonical two-step Claude
+  Code flow (`/plugin marketplace add axonpush/skills` then `/plugin
+  install axonpush@axonpush-plugins`). The previous one-liner shorthand
+  isn't part of Claude Code's plugin syntax.
+
 ## [0.0.3] – 2026-05-04
 
 ### Fixed

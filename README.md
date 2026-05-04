@@ -8,10 +8,12 @@ integration code.
 
 ## Install
 
-Claude Code:
+Claude Code (two-step — Claude Code's plugin system requires adding the
+marketplace before installing plugins from it):
 
 ```
-/plugin install axonpush/skills
+/plugin marketplace add axonpush/skills
+/plugin install axonpush@axonpush-plugins
 ```
 
 Any other agent (Cursor, Codex, OpenCode, Cline, GitHub Copilot, Windsurf,
