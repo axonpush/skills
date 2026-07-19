@@ -7,8 +7,8 @@ description: Wire AxonPush tracing into a Python LangChain or LangGraph project 
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -68,7 +68,7 @@ def axonpush_handler(agent_id: str = "my-agent") -> AxonPushCallbackHandler:
     """
     return AxonPushCallbackHandler(
         client=axonpush_client,
-        channel_id=int(os.environ["AXONPUSH_CHANNEL_ID"]),
+        channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
         agent_id=agent_id,
         trace_id=_current_otel_trace_id(),
     )
@@ -80,7 +80,7 @@ def axonpush_handler(agent_id: str = "my-agent") -> AxonPushCallbackHandler:
 
 ## Steps
 
-1. Install `axonpush[langchain]` using the project's package manager
+1. Install `axonpush[langchain]` from the latest GitHub commit -- e.g. `uv add "axonpush[langchain] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
 2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_BASE_URL`, `AXONPUSH_CHANNEL_ID` to `.env`
 3. Pick a single shared module the project already uses for cross-cutting infra (e.g. `app/observability.py`, `app/utils/axonpush.py`). Write the `axonpush_client`, `_current_otel_trace_id`, and `axonpush_handler` definitions there. Do not duplicate the client across files — there should be exactly one `AxonPush(...)` constructor call in the project.
 4. At each `.invoke()` / `.ainvoke()` call site, import `axonpush_handler` and pass `config={"callbacks": [axonpush_handler("<descriptive-agent-id>")]}`. Use one agent_id per logical agent (e.g. `"researcher"`, `"writer"`) so the dashboard separates their event lanes.

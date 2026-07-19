@@ -59,32 +59,63 @@ fi
 py_deps_file=$(mktemp); ts_deps_file=$(mktemp)
 trap 'rm -f "$py_deps_file" "$ts_deps_file"' EXIT
 
+# Parse pyproject.toml with Python's stdlib `tomllib` (3.11+) — proper TOML,
+# covering [project] deps, optional-dependencies, PEP 735 [dependency-groups],
+# and poetry. Prints one lowercase base package name per line.
+read_py_deps_tomllib() {
+  python3 - "$1/pyproject.toml" <<'PY'
+import re, sys, tomllib
+
+with open(sys.argv[1], "rb") as fh:
+    data = tomllib.load(fh)
+
+names: list[str] = []
+
+def add(spec) -> None:
+    if not isinstance(spec, str):
+        return
+    m = re.match(r"[A-Za-z0-9][A-Za-z0-9._-]*", spec.strip())
+    if m:
+        names.append(m.group(0).lower())
+
+project = data.get("project", {})
+for dep in project.get("dependencies", []) or []:
+    add(dep)
+for group in (project.get("optional-dependencies", {}) or {}).values():
+    for dep in group or []:
+        add(dep)
+for group in (data.get("dependency-groups", {}) or {}).values():
+    for dep in group or []:
+        add(dep)
+
+poetry = data.get("tool", {}).get("poetry", {})
+for section in ("dependencies", "dev-dependencies"):
+    for name in poetry.get(section, {}) or {}:
+        add(name)
+for group in (poetry.get("group", {}) or {}).values():
+    for name in (group.get("dependencies", {}) or {}):
+        add(name)
+
+for name in names:
+    print(name)
+PY
+}
+
 read_py_deps() {
   local d="$1"
-  # pyproject.toml — grab [project] dependencies via a tolerant grep.
   if [[ -f "$d/pyproject.toml" ]]; then
-    awk '
-      /^\[project\]/                  { in_proj=1; next }
-      /^\[/                           { in_proj=0; in_deps=0 }
-      in_proj && /^[[:space:]]*dependencies[[:space:]]*=[[:space:]]*\[/ { in_deps=1; next }
-      in_deps && /\]/                 { in_deps=0; next }
-      in_deps                         { print }
-      # Also catch [project.optional-dependencies.*] groups loosely.
-      /^\[project\.optional-dependencies/ { in_opt=1; next }
-      /^\[/                           { in_opt=0 }
-      in_opt && /=[[:space:]]*\[/     { in_opt_arr=1; next }
-      in_opt_arr && /\]/              { in_opt_arr=0; next }
-      in_opt_arr                      { print }
-    ' "$d/pyproject.toml" \
-      | sed -E 's/^[[:space:]]*"([^"]+)".*$/\1/; s/^[[:space:]]*'\''([^'\'']+)'\''.*$/\1/' \
-      | sed -E 's/[][><=!~;].*$//; s/[[:space:]]+$//' \
-      | tr '[:upper:]' '[:lower:]' \
-      | grep -E '^[a-z0-9][a-z0-9._-]*' \
-      || true
+    if command -v python3 >/dev/null 2>&1 && python3 -c 'import tomllib' 2>/dev/null; then
+      read_py_deps_tomllib "$d" 2>/dev/null || true
+    else
+      # Fallback when tomllib is unavailable: loose token extraction.
+      grep -oE '"[A-Za-z0-9][A-Za-z0-9._-]*' "$d/pyproject.toml" \
+        | tr -d '"' | tr '[:upper:]' '[:lower:]' || true
+    fi
   fi
   if [[ -f "$d/requirements.txt" ]]; then
     sed -E 's/#.*$//; s/[[:space:]]+$//' "$d/requirements.txt" \
       | grep -v '^[[:space:]]*$' \
+      | grep -v '^[[:space:]]*-' \
       | sed -E 's/[][><=!~;].*$//' \
       | tr '[:upper:]' '[:lower:]' \
       | grep -E '^[a-z0-9][a-z0-9._-]*' \

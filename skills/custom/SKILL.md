@@ -7,8 +7,8 @@ description: Wire direct AxonPush event publishing into a Python project that do
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -37,7 +37,7 @@ axonpush_client = AxonPush(
 # axonpush_client.events.publish(
 #     identifier="my.event",
 #     payload={"key": "value"},
-#     channel_id=int(os.environ["AXONPUSH_CHANNEL_ID"]),
+#     channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
 #     agent_id="my-agent",
 #     event_type=EventType.CUSTOM,
 # )
@@ -45,7 +45,7 @@ axonpush_client = AxonPush(
 
 ## Steps
 
-1. Install `axonpush` using the project's package manager
+1. Install `axonpush` from the latest GitHub commit -- e.g. `uv add "axonpush @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main entry point of the project
 4. Add imports and create the client as a module-level singleton

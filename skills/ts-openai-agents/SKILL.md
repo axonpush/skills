@@ -7,8 +7,8 @@ description: Wire AxonPush tracing into a TypeScript project that uses the OpenA
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -35,7 +35,7 @@ const axonpush = new AxonPush({
 
 const hooks = new AxonPushRunHooks({
   client: axonpush,
-  channelId: Number(process.env.AXONPUSH_CHANNEL_ID),
+  channelId: process.env.AXONPUSH_CHANNEL_ID,
 });
 
 // const result = await Runner.run(agent, input, { hooks });
@@ -43,7 +43,7 @@ const hooks = new AxonPushRunHooks({
 
 ## Steps
 
-1. Install `@axonpush/sdk` using the project's package manager
+1. Install `@axonpush/sdk` from the latest GitHub commit -- e.g. `npm install github:axonpush/ts-sdk` (or the `pnpm add`/`bun add`/`yarn add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main file where Runner.run() is called
 4. Add the imports and AxonPush client initialization

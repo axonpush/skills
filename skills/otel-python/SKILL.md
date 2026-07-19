@@ -7,8 +7,8 @@ description: Attach `AxonPushSpanExporter` to a Python project's OpenTelemetry `
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -23,12 +23,12 @@ Forward OpenTelemetry spans from a Python service into AxonPush via `AxonPushSpa
 
 ## Install
 
-Requires the `otel` extra:
+Requires the `otel` extra, installed from the latest GitHub commit:
 
 ```bash
-pip install "axonpush[otel]"
-# or: uv add "axonpush[otel]"
-# or: poetry add "axonpush[otel]"
+uv add "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"
+# or: pip install "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"
+# or: poetry add "git+https://github.com/axonpush/python-sdk.git#egg=axonpush[otel]"
 ```
 
 ## Reference Code — New Provider
@@ -56,7 +56,7 @@ provider.add_span_processor(
     BatchSpanProcessor(
         AxonPushSpanExporter(
             client=axonpush_client,
-            channel_id=int(os.environ["AXONPUSH_CHANNEL_ID"]),
+            channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
             service_name="my-service",
         )
     )
@@ -84,7 +84,7 @@ if isinstance(provider, TracerProvider):
         BatchSpanProcessor(
             AxonPushSpanExporter(
                 client=AxonPush(api_key=os.environ["AXONPUSH_API_KEY"], tenant_id=os.environ["AXONPUSH_TENANT_ID"]),
-                channel_id=int(os.environ["AXONPUSH_CHANNEL_ID"]),
+                channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
                 service_name="my-service",
             )
         )
@@ -93,7 +93,7 @@ if isinstance(provider, TracerProvider):
 
 ## Steps
 
-1. Install `axonpush[otel]` using the project's package manager
+1. Install `axonpush[otel]` from the latest GitHub commit -- e.g. `uv add "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
 2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_BASE_URL`, `AXONPUSH_CHANNEL_ID` to `.env`
 3. Detect whether a `TracerProvider` already exists in the project (search for `set_tracer_provider`, `TracerProvider(`, or auto-instrumentation setup in the main module)
 4. If one exists, attach `AxonPushSpanExporter` to it via `BatchSpanProcessor`

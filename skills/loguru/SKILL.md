@@ -7,12 +7,12 @@ description: Forward `loguru` log records into AxonPush as structured events. Ad
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md` — "loguru" section.
+`https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md` — "loguru" section.
 
 ## What gets added
 
 - `axonpush.integrations.loguru.axonpush_sink` registered as a loguru sink.
-- Each `logger.info(...)`, `logger.error(...)`, etc. becomes an event with `eventType: "log"` and `payload: { level, message, extra, exception }`.
+- Each `logger.info(...)`, `logger.error(...)`, etc. becomes an event with `eventType: "app.log"` and `payload: { level, message, extra, exception }`.
 
 ## Static reference
 

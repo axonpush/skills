@@ -7,8 +7,8 @@ description: Attach `AxonPushSpanExporter` to a TypeScript/Node project's OpenTe
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -23,10 +23,10 @@ Forward OpenTelemetry spans from a Node.js service into AxonPush via `AxonPushSp
 
 ## Install
 
-`@opentelemetry/api` and `@opentelemetry/sdk-trace-base` are optional peer dependencies. Install them alongside `@axonpush/sdk`:
+`@opentelemetry/api` and `@opentelemetry/sdk-trace-base` are optional peer dependencies. Install them alongside `@axonpush/sdk` (pulled from the latest GitHub commit):
 
 ```bash
-bun add @axonpush/sdk @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/sdk-trace-node
+bun add github:axonpush/ts-sdk @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/sdk-trace-node
 # or pnpm / yarn / npm equivalents
 ```
 
@@ -54,7 +54,7 @@ provider.addSpanProcessor(
   new BatchSpanProcessor(
     new AxonPushSpanExporter({
       client: axonpush,
-      channelId: Number(process.env.AXONPUSH_CHANNEL_ID),
+      channelId: process.env.AXONPUSH_CHANNEL_ID,
       serviceName: "my-service",
     }),
   ),
@@ -77,7 +77,7 @@ provider.addSpanProcessor(
   new BatchSpanProcessor(
     new AxonPushSpanExporter({
       client: axonpush,
-      channelId: Number(process.env.AXONPUSH_CHANNEL_ID),
+      channelId: process.env.AXONPUSH_CHANNEL_ID,
       serviceName: "my-service",
     }),
   ),
@@ -86,7 +86,7 @@ provider.addSpanProcessor(
 
 ## Steps
 
-1. Install `@axonpush/sdk @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/sdk-trace-node` using the project's package manager
+1. Install `@axonpush/sdk` from the latest GitHub commit (`github:axonpush/ts-sdk`) plus the OpenTelemetry peer deps `@opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/sdk-trace-node` using the project's package manager
 2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_BASE_URL`, `AXONPUSH_CHANNEL_ID` to `.env`
 3. Detect whether a `TracerProvider` already exists in the project (search for `provider.register()`, `NodeTracerProvider(`, `NodeSDK(`, or auto-instrumentation setup)
 4. If one exists, attach `AxonPushSpanExporter` to it via `BatchSpanProcessor`

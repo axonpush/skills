@@ -66,7 +66,7 @@ Two integration families:
 | `otel` (OpenTelemetry) | `otel-python` | `otel-ts` |
 | (none of the above, raw event publish) | `custom` | `ts-custom` |
 
-**B) Log-forwarder integrations** — funnel existing log calls into AxonPush as `eventType: "log"` events.
+**B) Log-forwarder integrations** — funnel existing log calls into AxonPush as `eventType: "app.log"` events.
 
 | Detected log lib | Sub-skill |
 |---|---|

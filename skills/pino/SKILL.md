@@ -7,12 +7,12 @@ description: Forward `pino` log records into AxonPush as structured events. Adds
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md` — "pino" section.
+`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "pino" section.
 
 ## What gets added
 
 - A pino transport from `@axonpush/sdk/integrations/pino` attached to the existing pino instance.
-- Each log record becomes an event with `eventType: "log"`, `identifier: <bindings.name | "log">`, `payload: { level, msg, ...rest }`.
+- Each log record becomes an event with `eventType: "app.log"`, `identifier: <bindings.name | "log">`, `payload: { level, msg, ...rest }`.
 
 ## Static reference
 

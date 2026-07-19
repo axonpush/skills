@@ -7,8 +7,8 @@ description: Wire AxonPush tracing into a Python CrewAI project (`crewai` packag
 
 Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
@@ -36,7 +36,7 @@ axonpush_client = AxonPush(
 
 axonpush_callbacks = AxonPushCrewCallbacks(
     client=axonpush_client,
-    channel_id=int(os.environ["AXONPUSH_CHANNEL_ID"]),
+    channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
     agent_id="crewai",
 )
 
@@ -54,7 +54,7 @@ axonpush_callbacks = AxonPushCrewCallbacks(
 
 ## Steps
 
-1. Install `axonpush[crewai]` using the project's package manager
+1. Install `axonpush[crewai]` from the latest GitHub commit -- e.g. `uv add "axonpush[crewai] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the file where `Crew(...)` is instantiated
 4. Add imports and create the callbacks object

@@ -7,12 +7,12 @@ description: Forward `winston` log records into AxonPush as structured events. A
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md` — "winston" section.
+`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "winston" section.
 
 ## What gets added
 
 - `AxonpushTransport` from `@axonpush/sdk/integrations/winston` added to the winston logger's transports array.
-- Each log record becomes an event with `eventType: "log"`, `identifier: <logger.name>`, `payload: { level, message, ...meta }`.
+- Each log record becomes an event with `eventType: "app.log"`, `identifier: <logger.name>`, `payload: { level, message, ...meta }`.
 
 ## Static reference
 

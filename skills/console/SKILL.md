@@ -7,12 +7,12 @@ description: Forward Node/TypeScript `console.*` calls (log/info/warn/error/debu
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/axonpush-ts/master/README.md` — "console" section.
+`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "console" section.
 
 ## What gets added
 
 - `attachConsole()` from `@axonpush/sdk/integrations/console` patches `console.log/info/warn/error/debug`.
-- Original console output is preserved; AxonPush gets a copy as an event with `eventType: "log"`, `identifier: console`, `payload: { level, args }`.
+- Original console output is preserved; AxonPush gets a copy as an event with `eventType: "app.log"`, `identifier: console`, `payload: { level, args }`.
 
 ## Static reference
 

@@ -7,12 +7,12 @@ description: Forward `structlog` log records into AxonPush as structured events.
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/axonpush-python/master/README.md` — "structlog" section.
+`https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md` — "structlog" section.
 
 ## What gets added
 
 - `axonpush.integrations.structlog.AxonpushProcessor` appended to the structlog processor chain.
-- Each `log.info(...)` / `log.error(...)` becomes an event with `eventType: "log"`, the bound context preserved as `payload`.
+- Each `log.info(...)` / `log.error(...)` becomes an event with `eventType: "app.log"`, the bound context preserved as `payload`.
 
 ## Static reference
 
