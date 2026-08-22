@@ -5,7 +5,32 @@ description: Wire the AxonPush observability SDK into the current project. Detec
 
 # AxonPush Integration Orchestrator
 
-You are integrating the AxonPush observability SDK into the user's project. Follow the seven steps below in order. Do not skip steps. Do not invent flags or arguments not listed here. All paths are relative to the project root (the directory the user invoked you from) unless otherwise stated.
+You are integrating the AxonPush observability SDK into the user's project. Follow the seven steps below in order. Do not skip steps. Do not invent flags or arguments not listed here. Project files are relative to the project root. Helper scripts are always relative to the directory containing this `SKILL.md`, never the project root.
+
+Before the prereq preamble, resolve the helper directory once. Preserve a host-provided `AXONPUSH_SKILL_DIR` when available, then check the supported install locations:
+
+```bash
+if [ -z "${AXONPUSH_SKILL_DIR:-}" ]; then
+  for candidate in \
+    "${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills/axonpush-integrate}" \
+    "$HOME/.agents/skills/axonpush-integrate" \
+    "$HOME/.claude/skills/axonpush-integrate" \
+    "$HOME/.codex/skills/axonpush-integrate" \
+    "$PWD/skills/axonpush-integrate"; do
+    if [ -n "$candidate" ] && [ -f "$candidate/helpers/detect.sh" ]; then
+      AXONPUSH_SKILL_DIR="$candidate"
+      break
+    fi
+  done
+fi
+test -n "${AXONPUSH_SKILL_DIR:-}" && test -f "$AXONPUSH_SKILL_DIR/helpers/detect.sh" || {
+  echo "Could not resolve the axonpush-integrate skill directory."
+  exit 1
+}
+export AXONPUSH_SKILL_DIR
+```
+
+Do not search for `helpers/` inside the user's repository. Keep `AXONPUSH_SKILL_DIR` available for every helper command below.
 
 When you need user input, phrase it as a plain question and list the options. The host UI will pick the best widget it has (button picker, chat prompt, etc.).
 
@@ -25,7 +50,7 @@ If either fails, stop. Tell the user what to install and exit.
 Run:
 
 ```bash
-bash skills/axonpush-integrate/helpers/detect.sh
+bash "$AXONPUSH_SKILL_DIR/helpers/detect.sh"
 ```
 
 It prints a single JSON object on stdout with shape:
@@ -133,7 +158,7 @@ Otherwise ask the user: "How do you want to authenticate with AxonPush? Options:
 Run:
 
 ```bash
-bash skills/axonpush-integrate/helpers/login.sh "${APP_URL:-https://app.axonpush.xyz}"
+bash "$AXONPUSH_SKILL_DIR/helpers/login.sh" "${APP_URL:-https://app.axonpush.xyz}"
 ```
 
 On success it prints JSON `{"api_key": "...", "tenant_id": "..."}` on stdout. Parse with `jq` into `API_KEY` and `TENANT_ID`.
@@ -174,14 +199,14 @@ export AXONPUSH_TENANT_ID="$TENANT_ID"
 ### 4a — App
 
 ```bash
-bash skills/axonpush-integrate/helpers/api.sh list-apps
+bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" list-apps
 ```
 
 Output is a JSON array of `{id, appId, name, ...}`.
 
 - If empty, ask the user: "No AxonPush apps yet. Name the new app (min 5 chars)." Default suggestion: the project directory name (sanitize to lowercase + hyphens; pad if under 5 chars). Then run:
   ```bash
-  bash skills/axonpush-integrate/helpers/api.sh create-app "<name>"
+  bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" create-app "<name>"
   ```
   Output is the new app object. Hold `id` as `APP_ID`.
 - If non-empty, list app names and ask: "Which app should this project use? Options: <names>, or create a new one." If they pick existing, hold its `id` as `APP_ID`. If they pick "create new", run the create-app flow above.
@@ -191,7 +216,7 @@ Output is a JSON array of `{id, appId, name, ...}`.
 Once `APP_ID` is held, fetch the app's existing channels:
 
 ```bash
-bash skills/axonpush-integrate/helpers/api.sh list-app "$APP_ID"
+bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" list-app "$APP_ID"
 ```
 
 Output is the full app object with `channels: [...]` populated.
@@ -214,7 +239,7 @@ Behaviour:
    - If it already exists in `channels[]`, reuse its `id`.
    - Otherwise call:
      ```bash
-     bash skills/axonpush-integrate/helpers/api.sh create-channel "<name>" "$APP_ID"
+     bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" create-channel "<name>" "$APP_ID"
      ```
      Hold the new channel's `id`.
 4. Build `CHANNEL_IDS=()` (the array of all channel ids the user picked) and `CHANNEL_NAMES=()` in matching order.
@@ -227,7 +252,7 @@ Write the credentials and channel ids idempotently. The primary channel id is wh
 If `PROVISIONED_VIA_MCP=true`, use the complete environment values returned by `provision_app`:
 
 ```bash
-bash skills/axonpush-integrate/helpers/env.sh \
+bash "$AXONPUSH_SKILL_DIR/helpers/env.sh" \
   AXONPUSH_API_KEY="$API_KEY" \
   AXONPUSH_TENANT_ID="$TENANT_ID" \
   AXONPUSH_APP_ID="$APP_ID" \
@@ -247,7 +272,7 @@ for i in "${!CHANNEL_IDS[@]}"; do
   CHANNELS_MAP+="${CHANNEL_NAMES[$i]}:${CHANNEL_IDS[$i]}"
 done
 
-bash skills/axonpush-integrate/helpers/env.sh \
+bash "$AXONPUSH_SKILL_DIR/helpers/env.sh" \
   AXONPUSH_API_KEY="$API_KEY" \
   AXONPUSH_TENANT_ID="$TENANT_ID" \
   AXONPUSH_APP_ID="$APP_ID" \
@@ -281,7 +306,7 @@ After all sub-skills finish, prove the wiring end-to-end by **publishing a real 
 
 ```bash
 TEST_ID="skill-test-$(date +%s)"
-bash skills/axonpush-integrate/helpers/api.sh publish-event \
+bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" publish-event \
   "$PRIMARY_CHANNEL_ID" \
   "$TEST_ID" \
   '{"ok": true, "source": "axonpush-integrate skill"}'
@@ -297,7 +322,7 @@ If MCP read tools are unavailable and credentials came from the manual/browser p
 
 ```bash
 sleep 1
-RECEIVED=$(bash skills/axonpush-integrate/helpers/api.sh list-events "$PRIMARY_CHANNEL_ID" 5 \
+RECEIVED=$(bash "$AXONPUSH_SKILL_DIR/helpers/api.sh" list-events "$PRIMARY_CHANNEL_ID" 5 \
   | jq --arg id "$TEST_ID" '[.data[]?] | map(select(.identifier == $id)) | length')
 ```
 
