@@ -1,11 +1,11 @@
 ---
 name: gateway
-description: Route a project's OpenAI or Anthropic traffic through the axonpush gateway with zero instrumentation. Change one base_url and add an x-axonpush-api-key header; every call, including tool calls and agent handoffs, is captured as a queryable span. Use when the user wants observability plus control (moderation, cost caps, audit trail) without adding an SDK, callback handler, or framework wrapper.
+description: Route a project's OpenAI or Anthropic traffic through the axonpush gateway with zero instrumentation. Change one base_url and add an x-axonpush-api-key header; every call, including tool calls and agent handoffs, is captured as a queryable span. Use when the user wants observability plus control (moderation, spend policies, audit trail) without adding an SDK, callback handler, or framework wrapper.
 ---
 
 # axonpush gateway (zero instrumentation)
 
-Point the project's OpenAI or Anthropic client at the axonpush gateway. No SDK, callback handler, or framework wrapper. You change the `base_url` and add one header. Every call, including tool calls and agent handoffs, is captured as a queryable span, and moderation rules and cost caps run inline before a call, response, or tool call is allowed through.
+Point the project's OpenAI or Anthropic client at the axonpush gateway. No SDK, callback handler, or framework wrapper. You change the `base_url` and add one header. Every call, including tool calls and agent handoffs, is captured as a queryable span, and moderation rules and spend policies run inline before a call, response, or tool call is allowed through.
 
 Prefer this path when the user wants observability and control fast and does not want to touch agent code beyond client construction. The framework sub-skills (langchain, crewai, anthropic, etc.) remain the right choice when the user wants richer in-process events or already publishes custom events; the two paths can coexist.
 
@@ -80,10 +80,10 @@ Because most agent frameworks accept a custom client or a `base_url` / `baseURL`
 - Spans for every call, queryable in the dashboard. Tool calls appear as their own spans with the tool name, arguments, and outcome. Agent handoffs are captured too.
 - Analytics broken down by agent and by tool, with agent, tool, and semantic-kind event filters.
 - Inline moderation and enforcement. Rules can block, redact, or flag on the request, the response, or a specific tool call, for example block a tool named `transfer_funds`, or block a call whose `amount` argument is over a threshold. Enforcement happens before the tool call or handoff executes.
-- Cost caps. Hard per-key or per-app spend ceilings that block pre-spend, so a runaway agent stops before it burns the budget.
+- Spend policies. Cost governance shaped as scope x window x threshold ladder. A policy targets a scope (app, env, model, provider, api-key, user, or tag), a window (daily, weekly, monthly, or cumulative), and a USD limit, then climbs a ladder of rungs where each rung is a threshold percent mapped to an action (notify, block, or fallback to a cheaper model). Blocks can be soft or hard, so a runaway agent is throttled or stopped before it burns the limit.
 - An immutable, queryable audit trail of what each agent did and what axonpush allowed, redacted, or blocked, shaped for compliance reviews (DORA, EU AI Act, SR 11-7).
 
-Moderation rules and cost caps are configured in the dashboard, not in the project code. This skill only wires the traffic through the gateway; point the user at their app's Moderation and Cost settings to author rules.
+Moderation rules and spend policies are authored in the dashboard, not in the project code. This skill only wires the traffic through the gateway; point the user at their app's Moderation and Spend Policies settings to author them.
 
 ## Verify
 

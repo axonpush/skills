@@ -4,6 +4,20 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.6] – 2026-09-16
+
+### Changed
+
+- Cost governance is now described as spend policies (scope x window x
+  threshold ladder) instead of cost caps or budgets, across the README,
+  the `gateway` sub-skill, the `axonpush-integrate` orchestrator, and the
+  plugin description. A spend policy targets a scope (app, env, model,
+  provider, api-key, user, or tag), a window (daily, weekly, monthly, or
+  cumulative), and a USD limit, then climbs a ladder of rungs where each
+  rung maps a threshold percent to an action (notify, block, or fallback
+  to a cheaper model); blocks can be soft or hard. Spend policies, like
+  moderation rules, are dashboard-authored and not wired by these skills.
+
 ## [0.0.5] – 2026-09-16
 
 ### Added

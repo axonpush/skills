@@ -74,7 +74,7 @@ A project usually wants more than one integration: an agent framework AND a log 
 
 Three integration families:
 
-**Z) Zero-instrumentation gateway** — the fastest path, and the one to lead with when the project calls OpenAI or Anthropic directly or through a framework that lets you set the provider `base_url`. You change one `base_url` and add an `x-axonpush-api-key` header; no SDK, callback handler, or framework wrapper is added. Every call, including tool calls and agent handoffs, is captured as a queryable span, and moderation rules plus cost caps run inline before a call, response, or tool call is allowed through.
+**Z) Zero-instrumentation gateway** — the fastest path, and the one to lead with when the project calls OpenAI or Anthropic directly or through a framework that lets you set the provider `base_url`. You change one `base_url` and add an `x-axonpush-api-key` header; no SDK, callback handler, or framework wrapper is added. Every call, including tool calls and agent handoffs, is captured as a queryable span, and moderation rules plus spend policies run inline before a call, response, or tool call is allowed through.
 
 | Detected key | Sub-skill |
 |---|---|
@@ -117,7 +117,7 @@ Behaviour:
    - For each entry in `frameworks[]`, look up the matching agent sub-skill for `language`.
    - For each entry in `logLibraries[]`, look up the matching log sub-skill.
    - Drop any unmapped (e.g. `console` is only in TS, `logging` only in Python).
-2. Show the user the recommended list and the full menu of unmapped options. Ask: **"Which integrations should I wire up? Pick all that apply."** Default-select the recommended ones. When `gateway` is recommended, tell the user in one line what it buys them: observability plus inline moderation and cost caps with zero instrumentation, by changing one `base_url`.
+2. Show the user the recommended list and the full menu of unmapped options. Ask: **"Which integrations should I wire up? Pick all that apply."** Default-select the recommended ones. When `gateway` is recommended, tell the user in one line what it buys them: observability plus inline moderation and spend policies with zero instrumentation, by changing one `base_url`.
 3. If the user picks none and `frameworks[]` was empty, default to `gateway` if a provider client was detected, otherwise `custom` (Python) or `ts-custom` (TypeScript) so they at least get raw event publishing.
 
 Hold the user's selection as `INTEGRATIONS=()` (bash-style array of sub-skill names). Order: agent frameworks first, log forwarders last (so the project boots logging after the agent client exists).

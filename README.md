@@ -26,15 +26,20 @@ framework-specific integration, whichever fits.
   tool named `transfer_funds`, or block a call whose `amount` argument is
   over a threshold. Enforcement runs before the tool call or handoff
   executes.
-- **Cost caps.** Hard per-key or per-app spend ceilings that block
-  pre-spend, so a runaway agent stops before it burns the budget.
+- **Spend policies.** Cost governance shaped as scope x window x
+  threshold ladder. A policy targets a scope (app, env, model, provider,
+  api-key, user, or tag), a window (daily, weekly, monthly, or
+  cumulative), and a USD limit, then climbs a ladder of rungs where each
+  rung is a threshold percent mapped to an action (notify, block, or
+  fallback to a cheaper model). Blocks can be soft or hard, so a runaway
+  agent is throttled or stopped before it burns the limit.
 - **Audit trail.** An immutable, queryable record of what each agent did and
   what axonpush allowed, redacted, or blocked, shaped for compliance reviews
   (DORA, EU AI Act, SR 11-7).
 
-Moderation rules and cost caps are authored in the dashboard, not in project
-code. These skills wire the traffic; you configure the rules in your app's
-settings.
+Moderation rules and spend policies are authored in the dashboard, not in
+project code. These skills wire the traffic; you configure the rules and
+policies in your app's settings.
 
 ## Install
 
@@ -67,7 +72,7 @@ Power users can invoke any framework sub-skill directly, e.g.
 | Skill | Language | Purpose |
 | --- | --- | --- |
 | `axonpush-integrate` | – | Orchestrator. Detects project, signs in, creates app/channel, delegates. |
-| `gateway` | any | Zero-instrumentation gateway. Change one `base_url` plus a header; captures every call, tool call, and handoff, and runs moderation and cost caps inline. |
+| `gateway` | any | Zero-instrumentation gateway. Change one `base_url` plus a header; captures every call, tool call, and handoff, and runs moderation and spend policies inline. |
 | `anthropic` | Python | Anthropic SDK message tracing. |
 | `crewai` | Python | CrewAI crew, agent, tool, and task callbacks. |
 | `custom` | Python | Direct event publishing for unsupported frameworks. |
