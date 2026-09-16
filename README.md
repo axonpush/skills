@@ -1,10 +1,40 @@
-# AxonPush Skills
+# axonpush skills
 
-Claude Code plugin and cross-agent skill bundle that wires the AxonPush
-observability SDK into any AI agent project. The orchestrator detects the
-project's language and framework, handles AxonPush sign-in and app/channel
-creation, writes `.env` credentials, and applies framework-specific
-integration code.
+Agent observability and control with zero instrumentation. Change one
+`base_url`, see and block the tool call or handoff before it executes, on
+request and response, and keep a regulator-ready audit trail.
+
+This is a Claude Code plugin and cross-agent skill bundle that wires axonpush
+into any AI agent project. The orchestrator detects the project's language
+and framework, handles axonpush sign-in and app/channel creation, writes
+`.env` credentials, and then either routes the project's LLM traffic through
+the axonpush gateway (the zero-instrumentation path) or applies a
+framework-specific integration, whichever fits.
+
+## What axonpush gives you
+
+- **Zero-instrumentation gateway.** Point your OpenAI or Anthropic
+  `base_url` at the axonpush gateway (`/gw/openai` or `/gw/anthropic`) and
+  add an `x-axonpush-api-key` header. No SDK or framework needed. Every
+  call, including tool calls and agent handoffs, is captured as a queryable
+  span.
+- **Tool-call and handoff observability.** Tool calls appear as spans with
+  the tool name, arguments, and outcome. Analytics break down by agent and
+  by tool, with agent, tool, and semantic-kind event filters.
+- **Inline moderation and enforcement.** Rules can block, redact, or flag on
+  the request, the response, or a specific tool call, for example block a
+  tool named `transfer_funds`, or block a call whose `amount` argument is
+  over a threshold. Enforcement runs before the tool call or handoff
+  executes.
+- **Cost caps.** Hard per-key or per-app spend ceilings that block
+  pre-spend, so a runaway agent stops before it burns the budget.
+- **Audit trail.** An immutable, queryable record of what each agent did and
+  what axonpush allowed, redacted, or blocked, shaped for compliance reviews
+  (DORA, EU AI Act, SR 11-7).
+
+Moderation rules and cost caps are authored in the dashboard, not in project
+code. These skills wire the traffic; you configure the rules in your app's
+settings.
 
 ## Install
 
@@ -37,6 +67,7 @@ Power users can invoke any framework sub-skill directly, e.g.
 | Skill | Language | Purpose |
 | --- | --- | --- |
 | `axonpush-integrate` | – | Orchestrator. Detects project, signs in, creates app/channel, delegates. |
+| `gateway` | any | Zero-instrumentation gateway. Change one `base_url` plus a header; captures every call, tool call, and handoff, and runs moderation and cost caps inline. |
 | `anthropic` | Python | Anthropic SDK message tracing. |
 | `crewai` | Python | CrewAI crew, agent, tool, and task callbacks. |
 | `custom` | Python | Direct event publishing for unsupported frameworks. |

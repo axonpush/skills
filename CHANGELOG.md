@@ -4,6 +4,38 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.5] – 2026-09-16
+
+### Added
+
+- New `gateway` sub-skill: the zero-instrumentation path. It routes a
+  project's OpenAI or Anthropic traffic through the axonpush gateway
+  (`/gw/openai` or `/gw/anthropic`) by changing one `base_url` and adding
+  an `x-axonpush-api-key` header. No SDK, callback handler, or framework
+  wrapper is added. Every call, including tool calls and agent handoffs,
+  is captured as a queryable span. Ships Python and TypeScript reference
+  snippets for both the OpenAI and Anthropic SDKs.
+- `axonpush-integrate` orchestrator now treats the gateway as a first
+  integration family and recommends it ahead of framework sub-skills when
+  a provider client (or a framework that exposes the provider `base_url`)
+  is detected. Step 2 recommendation and default-selection logic, and
+  Step 6 delegation, updated to pass the gateway sub-skill the provider
+  and `AXONPUSH_API_KEY` instead of channel ids.
+
+### Changed
+
+- Repositioning across the README and orchestrator: axonpush is agent
+  observability plus control with zero instrumentation. The docs now lead
+  with the gateway and document the capabilities it unlocks: tool-call and
+  handoff observability (spans with tool name, arguments, outcome;
+  analytics by agent and by tool; agent, tool, and semantic-kind filters),
+  inline moderation and enforcement (block, redact, or flag on the
+  request, the response, or a specific tool call, before it executes),
+  hard per-key and per-app cost caps that block pre-spend, and an
+  immutable, queryable audit trail shaped for DORA, EU AI Act, and
+  SR 11-7 reviews. Moderation rules and cost caps are noted as
+  dashboard-authored, not wired by these skills.
+
 ## [0.0.4] – 2026-05-04
 
 ### Changed
