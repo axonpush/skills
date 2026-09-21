@@ -1,7 +1,7 @@
 {
   "name": "axonpush",
-  "version": "0.0.4",
-  "description": "AxonPush observability SDK integration skills. Detects your AI agent framework (LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, OTel) and wires AxonPush tracing into your project end-to-end.",
+  "version": "0.0.7",
+  "description": "axonpush agent observability and control skills. Zero instrumentation: change one base_url to route OpenAI or Anthropic traffic through the axonpush gateway, capture every call, tool call, and handoff as a span, and run inline moderation and spend policies. Stamp custom business attributes to get discoverable dimensions, and let your coding agent author a dashboard tailored to your domain over MCP. Also wires framework-native tracing (LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, OTel) when you want in-process events.",
   "author": {
     "name": "AxonPush",
     "url": "https://axonpush.xyz"
@@ -15,7 +15,12 @@
   "keywords": [
     "axonpush",
     "observability",
+    "control",
+    "gateway",
+    "moderation",
     "tracing",
+    "analytics",
+    "dashboards",
     "ai-agents",
     "langchain",
     "crewai",

@@ -4,6 +4,66 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.7] – 2026-09-21
+
+### Added
+
+- New `axonpush-tailor-dashboard` skill: scans the project's backend to find
+  the business dimensions it emits, discovers what is already flowing via the
+  axonpush MCP (`analytics_dimensions`), stamps any high-value gaps as span
+  attributes (axonpush turns every attribute into a discoverable dimension you
+  can break down, trend, and filter by), and authors a dashboard tailored to
+  the project — saved over MCP as a JSON widget spec and rendered generically in
+  the dashboard. The `axonpush-integrate` orchestrator gained an optional Step 8
+  that offers this once telemetry is flowing. The emit mechanism lives only in
+  this skill; the framework sub-skills stay focused on wiring telemetry.
+
+## [0.0.6] – 2026-09-16
+
+### Changed
+
+- Cost governance is now described as spend policies (scope x window x
+  threshold ladder) instead of cost caps or budgets, across the README,
+  the `gateway` sub-skill, the `axonpush-integrate` orchestrator, and the
+  plugin description. A spend policy targets a scope (app, env, model,
+  provider, api-key, user, or tag), a window (daily, weekly, monthly, or
+  cumulative), and a USD limit, then climbs a ladder of rungs where each
+  rung maps a threshold percent to an action (notify, block, or fallback
+  to a cheaper model); blocks can be soft or hard. Spend policies, like
+  moderation rules, are dashboard-authored and not wired by these skills.
+
+## [0.0.5] – 2026-09-16
+
+### Added
+
+- New `gateway` sub-skill: the zero-instrumentation path. It routes a
+  project's OpenAI or Anthropic traffic through the axonpush gateway
+  (`/gw/openai` or `/gw/anthropic`) by changing one `base_url` and adding
+  an `x-axonpush-api-key` header. No SDK, callback handler, or framework
+  wrapper is added. Every call, including tool calls and agent handoffs,
+  is captured as a queryable span. Ships Python and TypeScript reference
+  snippets for both the OpenAI and Anthropic SDKs.
+- `axonpush-integrate` orchestrator now treats the gateway as a first
+  integration family and recommends it ahead of framework sub-skills when
+  a provider client (or a framework that exposes the provider `base_url`)
+  is detected. Step 2 recommendation and default-selection logic, and
+  Step 6 delegation, updated to pass the gateway sub-skill the provider
+  and `AXONPUSH_API_KEY` instead of channel ids.
+
+### Changed
+
+- Repositioning across the README and orchestrator: axonpush is agent
+  observability plus control with zero instrumentation. The docs now lead
+  with the gateway and document the capabilities it unlocks: tool-call and
+  handoff observability (spans with tool name, arguments, outcome;
+  analytics by agent and by tool; agent, tool, and semantic-kind filters),
+  inline moderation and enforcement (block, redact, or flag on the
+  request, the response, or a specific tool call, before it executes),
+  hard per-key and per-app cost caps that block pre-spend, and an
+  immutable, queryable audit trail shaped for DORA, EU AI Act, and
+  SR 11-7 reviews. Moderation rules and cost caps are noted as
+  dashboard-authored, not wired by these skills.
+
 ## [0.0.4] – 2026-05-04
 
 ### Changed
