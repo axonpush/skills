@@ -4,6 +4,23 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.7] – 2026-09-21
+
+### Added
+
+- New `axonpush-tailor-dashboard` skill: scans the project's backend to find
+  the business dimensions it emits, discovers what is already flowing via the
+  axonpush MCP (`analytics_dimensions`), instruments any high-value gaps, and
+  authors a dashboard tailored to the project — saved over MCP as a JSON widget
+  spec and rendered generically in the dashboard.
+- "Custom dimensions (business attributes)" guidance in the `otel-python`,
+  `custom`, and `langchain` sub-skills: how to stamp low-cardinality business
+  attributes on spans/events so each becomes a discoverable dimension you can
+  break down (`dimension=tag&tagKey=…`), trend, and filter
+  (`filterTagKey`/`filterTagValue`) by. The `axonpush-integrate` orchestrator
+  gained an optional Step 8 that offers this and the tailored dashboard once
+  telemetry is flowing.
+
 ## [0.0.6] – 2026-09-16
 
 ### Changed

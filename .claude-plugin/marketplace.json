@@ -6,7 +6,7 @@
     "url": "https://axonpush.xyz"
   },
   "metadata": {
-    "description": "axonpush agent observability and control skills. Zero instrumentation via the gateway, plus framework-native tracing."
+    "description": "axonpush agent observability and control skills. Zero instrumentation via the gateway, plus framework-native tracing, custom-dimension analytics, and agent-authored dashboards."
   },
   "plugins": [
     {
@@ -15,7 +15,7 @@
         "source": "github",
         "repo": "axonpush/skills"
       },
-      "description": "Add axonpush agent observability and control. Route OpenAI or Anthropic traffic through the zero-instrumentation gateway (one base_url change) to capture every call, tool call, and handoff and run inline moderation and cost caps, or wire framework-native tracing for LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, Deep Agents, OpenTelemetry, or custom frameworks.",
+      "description": "Add axonpush agent observability and control. Route OpenAI or Anthropic traffic through the zero-instrumentation gateway (one base_url change) to capture every call, tool call, and handoff and run inline moderation and spend policies, or wire framework-native tracing for LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, Deep Agents, OpenTelemetry, or custom frameworks. Stamp custom business attributes for discoverable dimensions, and let your coding agent author a dashboard tailored to your domain over MCP.",
       "category": "observability",
       "keywords": [
         "axonpush",
@@ -24,6 +24,8 @@
         "gateway",
         "moderation",
         "tracing",
+        "analytics",
+        "dashboards",
         "ai-agents",
         "langchain",
         "crewai",

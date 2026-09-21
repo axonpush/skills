@@ -21,6 +21,13 @@ framework-specific integration, whichever fits.
 - **Tool-call and handoff observability.** Tool calls appear as spans with
   the tool name, arguments, and outcome. Analytics break down by agent and
   by tool, with agent, tool, and semantic-kind event filters.
+- **Custom dimensions and tailored dashboards.** Stamp your own business
+  attributes on spans (e.g. `participant_role`, `tenant`, `plan`) and axonpush
+  makes each one a discoverable dimension you can break down, trend, and filter
+  by — from the dashboard's Usage explorer or the MCP `analytics_dimensions`
+  tool. Because a dashboard is a JSON widget spec bound to the analytics API,
+  your coding agent can scan your backend and author one tailored to your domain
+  over MCP. See the `axonpush-tailor-dashboard` skill.
 - **Inline moderation and enforcement.** Rules can block, redact, or flag on
   the request, the response, or a specific tool call, for example block a
   tool named `transfer_funds`, or block a call whose `amount` argument is
@@ -66,6 +73,10 @@ detection, login, app/channel selection, `.env` writing, and code edits.
 
 Power users can invoke any framework sub-skill directly, e.g.
 `/axonpush-langchain`.
+
+Once telemetry is flowing, run `/axonpush-tailor-dashboard` to have your agent
+scan the backend, discover (and if needed instrument) the business dimensions
+your app emits, and save a dashboard tailored to it over the axonpush MCP.
 
 ## Sub-skills
 
