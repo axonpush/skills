@@ -72,6 +72,7 @@ Power users can invoke any framework sub-skill directly, e.g.
 | Skill | Language | Purpose |
 | --- | --- | --- |
 | `axonpush-integrate` | – | Orchestrator. Detects project, signs in, creates app/channel, delegates. |
+| `axonpush-tailor-dashboard` | – | Scans the backend, discovers/instruments business dimensions, and authors a dashboard tailored to the project over the axonpush MCP. |
 | `gateway` | any | Zero-instrumentation gateway. Change one `base_url` plus a header; captures every call, tool call, and handoff, and runs moderation and spend policies inline. |
 | `anthropic` | Python | Anthropic SDK message tracing. |
 | `crewai` | Python | CrewAI crew, agent, tool, and task callbacks. |

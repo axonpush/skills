@@ -92,6 +92,33 @@ The reference code above already supports this — no extra wiring needed. With 
 
 If the project isn't OTel-instrumented, `_current_otel_trace_id()` returns `None`, the SDK auto-generates a fresh trace_id, and you still get a clean per-invocation waterfall — just without the backend span attached.
 
+## Custom dimensions (business attributes)
+
+Stamping low-cardinality business attributes makes your usage sliceable by your
+own domain (e.g. `participant_role`, `tenant`, `plan`) — each key becomes a
+discoverable dimension in the dashboard's Usage explorer and the MCP
+`analytics_dimensions` tool.
+
+Two reliable ways to attach them:
+
+- **If the `otel-python` skill is also applied** (the common case, for trace
+  correlation): set them on the current span, which the handler already ties its
+  events to:
+
+  ```python
+  from opentelemetry import trace
+  trace.get_current_span().set_attribute("participant_role", role)
+  ```
+
+- **Otherwise**, publish a companion custom event carrying an `attributes` map
+  (see the `custom` skill) at the point the business context is known.
+
+They then appear in `GET /analytics/dimensions` and can be broken down
+(`dimension=tag&tagKey=participant_role`) or filtered
+(`filterTagKey=participant_role&filterTagValue=candidate`). Use stable,
+low-cardinality values — axonpush drops id-shaped values from the dimension
+catalog.
+
 ## Fail-Open
 
 The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, tracing callbacks are silently suppressed — the LangChain integration will never crash or block the user's application.

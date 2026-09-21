@@ -363,6 +363,23 @@ bun -e "import {AxonPush} from '@axonpush/sdk'; await new AxonPush().events.publ
 
 End with a brief summary (3–5 bullets): which integrations were wired, which channels were created/reused, the test-event result, and what command the user should run next to exercise their real agent.
 
+## Step 8 — Offer custom dimensions + a tailored dashboard (optional)
+
+Once telemetry flows, the highest-leverage follow-up is making it sliceable by
+the project's *business* domain. Mention this in the summary and offer it:
+
+1. **Stamp business attributes.** From the codebase you just instrumented, you
+   already know the domain (roles, tenants, plan tiers, feature flags). Adding a
+   few low-cardinality span attributes (e.g. `participant_role`, `tenant`) makes
+   each one a discoverable dimension in the dashboard's Usage explorer and the
+   MCP `analytics_dimensions` tool. The "Custom dimensions" section of the
+   sub-skill you just applied shows exactly how.
+2. **Author a tailored dashboard.** If the host offers the
+   `axonpush-tailor-dashboard` skill, suggest running it: it scans the backend,
+   proposes the business dimensions worth tracking, wires any missing
+   instrumentation, and saves a dashboard tailored to this project over the
+   axonpush MCP. Do not block on it — it is an opt-in enhancement.
+
 ## Rules (non-negotiable)
 
 These apply at every step. Violating them is a regression.
