@@ -39,13 +39,21 @@ for a present key to confirm counts are non-trivial.
 
 ## Step 3 — Instrument the gaps (only with the user's ok)
 
-For high-value dimensions from step 1 that were missing in step 2, add the span
-attribute at the code site where the value is known. Follow the "Custom
-dimensions" section of the relevant `axonpush-integrate` sub-skill
-(`otel-python`, `custom`, `langchain`, …) for the exact mechanism
-(`span.set_attribute("participant_role", role)` or an `attributes` map on a
-published event). Keep diffs minimal and never change behavior. Use stable,
-low-cardinality keys/values — axonpush drops id-shaped values from the catalog.
+For high-value dimensions from step 1 that were missing in step 2, add the
+attribute at the code site where the value is known. axonpush turns every span
+attribute into a discoverable dimension, so the mechanism is just whatever the
+project already uses to attach attributes:
+
+- **OpenTelemetry spans** (any language/framework, incl. the gateway path):
+  `span.set_attribute("participant_role", role)` on the current span.
+- **Direct event publish** (the `custom` SDK path): add the key under the
+  event's `attributes` map.
+- **Structured logging** (logging/loguru/structlog/pino/winston): add the key
+  as a structured field — it lands in the event's attributes.
+
+Keep diffs minimal and never change behavior. Use stable, low-cardinality
+keys/values — axonpush drops id-shaped values (UUIDs, long hex/number runs) from
+the catalog, since a value unique per request is a useless facet.
 
 Tell the user these take effect for *new* telemetry, so a freshly instrumented
 dimension will populate as traffic arrives.

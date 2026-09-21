@@ -100,35 +100,6 @@ if isinstance(provider, TracerProvider):
 5. If none exists, create one (see "New Provider") using the project name as `service.name`
 6. Use `BatchSpanProcessor`, never `SimpleSpanProcessor`, in production
 
-## Custom dimensions (business attributes)
-
-axonpush preserves **every** span attribute, so stamping business attributes turns
-your telemetry into a dataset you can slice by your own domain — not just by model
-or status. This is what makes the dashboard's Usage explorer and the MCP
-`analytics_dimensions` tool useful: each attribute key you set becomes a
-discoverable dimension you can break down, trend, and filter by.
-
-Set attributes on the span where the business context is known:
-
-```python
-from opentelemetry import trace
-
-span = trace.get_current_span()
-span.set_attribute("participant_role", role)   # "candidate" | "recruiter"
-span.set_attribute("tenant", tenant_id)
-span.set_attribute("plan", plan_tier)
-```
-
-They then appear in `GET /analytics/dimensions`, and you can:
-
-- break down by one: `GET /analytics/breakdown?dimension=tag&tagKey=participant_role`
-- trend/percentiles for a value: `GET /analytics/timeseries?filterTagKey=participant_role&filterTagValue=candidate`
-
-**Naming guidance:** use stable, low-cardinality keys and values. axonpush drops
-id-shaped values (UUIDs, long hex/number runs) and very long strings from the
-dimension catalog — a value that is unique per request is a useless facet, so put
-those in the payload, not in a dimension attribute.
-
 ## Fail-Open
 
 `AxonPush(fail_open=True)` is the default. If AxonPush is unreachable the exporter silently drops spans — no application impact.
