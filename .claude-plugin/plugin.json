@@ -1,6 +1,6 @@
 {
   "name": "axonpush",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "axonpush agent observability and control skills. Zero instrumentation: change one base_url to route OpenAI or Anthropic traffic through the axonpush gateway, capture every call, tool call, and handoff as a span, and run inline moderation and spend policies. Stamp custom business attributes to get discoverable dimensions, and let your coding agent author a dashboard tailored to your domain over MCP. Also wires framework-native tracing (LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, OTel) when you want in-process events.",
   "author": {
     "name": "AxonPush",
@@ -28,6 +28,8 @@
     "anthropic",
     "vercel-ai",
     "mastra",
-    "opentelemetry"
+    "opentelemetry",
+    "sentry",
+    "otlp"
   ]
 }

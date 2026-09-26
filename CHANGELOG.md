@@ -4,6 +4,32 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.8] – 2026-09-26
+
+### Added
+
+- New `sentry` sub-skill: points an existing Sentry SDK's DSN at axonpush
+  (`https://<key>@host/<channelId>`) so exceptions, issues, transactions, and
+  logs land on the same trace as gateway and OTLP telemetry, with the
+  environment-slug trap and the honest limitation that session replay and
+  profiling are dropped as not-mapped.
+- `axonpush-integrate` is now a three-pillar orchestrator (gateway, OTel,
+  Sentry) with a monorepo inventory step, a per-call-site pillar decision,
+  per-pillar verification, a correlation check, and a coverage summary.
+- `detect.sh` now emits `providers[]` (raw provider clients that are gateway
+  candidates) and `errorTracking[]` (Sentry), so the gateway and Sentry pillars
+  surface automatically.
+
+### Changed
+
+- `gateway` sub-skill: corrected the OpenAI base URL to `/gw/openai/v1` (the
+  `/v1` is required, the previous `/gw/openai` 404s upstream), and added
+  call-site coverage, an Azure/Bedrock caveat, and a correlation note.
+- `otel-python` and `otel-ts`: install from the published `axonpush` /
+  `@axonpush/sdk` packages instead of the archived SDK repos, lead with the
+  zero-code stock-OTLP path, keep `AxonPushSpanExporter` for agent attributes,
+  and add a trace-correlation note.
+
 ## [0.0.7] – 2026-09-21
 
 ### Added

@@ -1,11 +1,19 @@
 ---
 name: axonpush-integrate
-description: Wire axonpush into the current project for agent observability and control with zero instrumentation. Detects language and AI framework, browser-logs the user in (or reads creds from env), creates an app+channel, and delegates to the matching sub-skill. Prefers the zero-instrumentation gateway (change one base_url) when a provider client is present, and otherwise wires a framework or log-forwarder sub-skill (langchain, crewai, anthropic, openai-agents, vercel-ai, mastra, langgraph, llamaindex, google-adk, deepagents, otel, or custom). Use when the user asks to "set up axonpush", "add tracing", "integrate axonpush", or runs the axonpush-integrate skill.
+description: Wire axonpush into the current project for complete LLM/agent observability and control across three pillars, the zero-instrumentation gateway (base_url swap), OpenTelemetry (OTLP export), and Sentry (DSN swap), correlated on one trace. Inventories a codebase (including a polyglot monorepo), chooses the right pillar per call site, browser-logs the user in (or reads creds from env), creates an app+channels, delegates to the matching sub-skills (gateway, otel, sentry, langchain, crewai, anthropic, openai-agents, vercel-ai, mastra, langgraph, llamaindex, google-adk, deepagents, log forwarders, or custom), then verifies ingestion end to end and reports a coverage summary. Use when the user asks to "set up axonpush", "add tracing", "instrument this project", or runs the axonpush-integrate skill.
 ---
 
 # axonpush integration orchestrator
 
-You are wiring axonpush into the user's project for agent observability and control. The lead capability is a zero-instrumentation gateway: the user changes one `base_url` and sees, and can block, the tool call or handoff before it executes, on both request and response, while keeping a regulator-ready audit trail. Framework and log-forwarder sub-skills remain available for richer in-process events. Follow the seven steps below in order. Do not skip steps. Do not invent flags or arguments not listed here. Project files are relative to the project root. Helper scripts are always relative to the directory containing this `SKILL.md`, never the project root.
+You are wiring axonpush into the user's project for complete LLM and agent observability and control. axonpush has three complementary ways to get a project's traffic in, and a fully instrumented project usually uses more than one:
+
+1. **Gateway** (zero instrumentation): change the provider `base_url` to the axonpush gateway (`/gw/openai/v1`, `/gw/anthropic`) and add `x-axonpush-api-key`. Every model call, tool call, and handoff is captured as a span, and moderation plus spend policies run inline before a call is allowed through. Lead with this wherever a provider client is constructed.
+2. **OpenTelemetry (OTLP)**: point an existing OTLP exporter at axonpush (`/v1/traces`, `/v1/logs`) so generic HTTP, DB, and queue spans plus app spans land in the same traces. Zero code when the service is already instrumented.
+3. **Sentry**: point an existing Sentry SDK's DSN at axonpush so exceptions, issues, transactions, and logs land on the same timeline.
+
+All three correlate on one trace when they share a trace id, so a single failing run can show the gateway call, the surrounding OTLP spans, and the Sentry exception together. Framework and log-forwarder sub-skills remain available for richer in-process agent events.
+
+Follow the steps below in order. Do not skip steps. Do not invent flags or arguments not listed here. Project files are relative to the project root. Helper scripts are always relative to the directory containing this `SKILL.md`, never the project root.
 
 Before the prereq preamble, resolve the helper directory once. Preserve a host-provided `AXONPUSH_SKILL_DIR` when available, then check the supported install locations:
 
@@ -59,28 +67,66 @@ It prints a single JSON object on stdout with shape:
 {"language": "python|typescript|both|unknown",
  "packageManager": "uv|poetry|pip|pnpm|bun|npm|yarn|unknown",
  "frameworks": ["langchain", "anthropic", ...],
- "logLibraries": ["loguru", "pino", ...]}
+ "logLibraries": ["loguru", "pino", ...],
+ "providers": ["openai", "anthropic", "azure-openai", "bedrock", ...],
+ "errorTracking": ["sentry"]}
 ```
+
+- `providers[]` are raw provider clients whose `base_url` can be pointed at the gateway. A non-empty `providers[]` means the **gateway** pillar applies.
+- `errorTracking[]` containing `sentry` means the **Sentry** pillar applies.
+- `frameworks[]` containing `otel`/`otel-ts` means the **OTel** pillar applies.
 
 Parse it with `jq`. Hold these values for the rest of the procedure.
 
-If `language == "both"`, ask the user: "Both Python and TypeScript detected. Which SDK do you want to integrate? Options: python, typescript."
+If `language == "both"`, ask the user: "Both Python and TypeScript detected. Which SDK do you want to integrate? Options: python, typescript." (In a monorepo the answer is often "both", see the inventory step.)
 
 If `language == "unknown"`, ask the user: "Could not detect project language. Which SDK? Options: python, typescript."
 
+### Complex or polyglot monorepo: inventory first
+
+`detect.sh` reads one directory. A real project is often a monorepo with several services in different languages, each with its own LLM SDKs, frameworks, OTel setup, and Sentry client. Before choosing anything, build an inventory:
+
+1. Find the service roots. Look for each `package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, plus workspace files (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, `[tool.uv.workspace]`, Docker Compose services). Treat each as a candidate service.
+2. Run `detect.sh <dir>` once per service root.
+3. Grep across the whole tree for LLM call sites the manifest cannot show, because a call site is what you actually instrument: `OpenAI(`, `new OpenAI`, `AzureOpenAI`, `Anthropic(`, `new Anthropic`, `ChatOpenAI`, `ChatAnthropic`, `bedrock-runtime`, `invoke_model`, `generativeai`, `base_url=`, `baseURL:`, and existing OTel/`Sentry.init`/`sentry_sdk.init` setup.
+4. Record a per-service inventory table: service path, language, providers, frameworks, OTel present?, Sentry present?, and the chosen pillar(s). Show this table to the user before wiring anything, and confirm scope. For a large repo, ask which services to start with rather than instrumenting all at once.
+
+Hold the inventory. Steps 2–7 then run per service (or per selected subset), reusing the same app and credentials but choosing pillars per service.
+
 ## Step 2 — Pick Integrations (multi-select)
 
-A project usually wants more than one integration: an agent framework AND a log forwarder, or multiple agent frameworks side by side, or just logging without any agent framework. This step builds a list of sub-skills to invoke; **the user can pick as many as apply.**
+A project usually wants more than one integration: the gateway for provider calls AND OTel for the HTTP/DB layer AND Sentry for exceptions, or an agent framework plus a log forwarder, or several of these side by side. This step builds a list of sub-skills to invoke; **the user can pick as many as apply.** For a monorepo, run this step per service using its inventory row.
 
-Three integration families:
+### Per-call-site pillar decision
 
-**Z) Zero-instrumentation gateway** — the fastest path, and the one to lead with when the project calls OpenAI or Anthropic directly or through a framework that lets you set the provider `base_url`. You change one `base_url` and add an `x-axonpush-api-key` header; no SDK, callback handler, or framework wrapper is added. Every call, including tool calls and agent handoffs, is captured as a queryable span, and moderation rules plus spend policies run inline before a call, response, or tool call is allowed through.
+For each place telemetry can come from, choose the least invasive pillar that captures it:
+
+- **A provider client with a swappable `base_url`** (OpenAI, Anthropic, or an OpenAI-compatible provider such as OpenRouter/Groq/Together/Mistral) → **gateway**. This is the lead path: it captures the model call, tool calls, and handoffs with no code beyond client construction, and adds inline moderation and spend control.
+- **A provider SDK with no swappable base URL** (Amazon Bedrock, Vertex, Azure OpenAI when its URL is fixed) → **OTel** (Path B / framework sub-skill), because the gateway cannot proxy it.
+- **Generic HTTP, database, queue, and app spans** → **OTel**. If the service already emits OpenTelemetry, point its exporter at axonpush (zero code).
+- **Exceptions, issues, and Sentry transactions** → **Sentry**, when a Sentry SDK is already present. Do not add Sentry where there is none.
+- **Rich in-process agent events** (chain steps, tool lifecycle, token usage) → the matching **framework sub-skill**.
+- **Existing log calls** → the matching **log forwarder**.
+
+The pillars coexist and correlate on one trace. Wiring the gateway does not preclude OTel or Sentry on the same service; a fully instrumented service commonly runs all three.
+
+Integration families:
+
+**Z) Zero-instrumentation gateway** is the fastest path, and the one to lead with when the project calls OpenAI or Anthropic directly or through a framework that lets you set the provider `base_url`. You change one `base_url` and add an `x-axonpush-api-key` header; no SDK, callback handler, or framework wrapper is added.
 
 | Detected key | Sub-skill |
 |---|---|
-| `openai` or `anthropic` provider client (any language), or a framework that exposes the provider `base_url` | `gateway` |
+| Any entry in `providers[]` (openai, anthropic, or OpenAI-compatible), or a framework that exposes the provider `base_url` | `gateway` |
 
-Offer `gateway` first when it applies. It can also run alongside a framework or log-forwarder integration; they are not mutually exclusive.
+**Y) Telemetry pillars**: bring in non-LLM spans and exceptions so a trace is complete.
+
+| Detected key | Sub-skill |
+|---|---|
+| `otel` (Python OpenTelemetry) | `otel-python` |
+| `otel-ts` (Node OpenTelemetry) | `otel-ts` |
+| `sentry` in `errorTracking[]` (any language) | `sentry` |
+
+Offer `gateway` first when it applies, then the telemetry pillars, then the framework and log families. They are not mutually exclusive.
 
 **A) Agent-framework integrations** — instrument LLM calls, agent runs, tool invocations in-process.
 
@@ -113,12 +159,14 @@ Offer `gateway` first when it applies. It can also run alongside a framework or 
 Behaviour:
 
 1. Build `RECOMMENDED[]` from `detect.sh` output:
-   - If an `openai` or `anthropic` provider client is present (or a framework that lets you set the provider `base_url`), put `gateway` at the top of `RECOMMENDED[]`. It is the least invasive path and the one to lead with.
+   - If `providers[]` is non-empty (or a framework that lets you set the provider `base_url` is present), put `gateway` at the top of `RECOMMENDED[]`. It is the least invasive path and the one to lead with.
+   - If `frameworks[]` contains `otel` add `otel-python`; if it contains `otel-ts` add `otel-ts`.
+   - If `errorTracking[]` contains `sentry`, add `sentry`.
    - For each entry in `frameworks[]`, look up the matching agent sub-skill for `language`.
    - For each entry in `logLibraries[]`, look up the matching log sub-skill.
    - Drop any unmapped (e.g. `console` is only in TS, `logging` only in Python).
-2. Show the user the recommended list and the full menu of unmapped options. Ask: **"Which integrations should I wire up? Pick all that apply."** Default-select the recommended ones. When `gateway` is recommended, tell the user in one line what it buys them: observability plus inline moderation and spend policies with zero instrumentation, by changing one `base_url`.
-3. If the user picks none and `frameworks[]` was empty, default to `gateway` if a provider client was detected, otherwise `custom` (Python) or `ts-custom` (TypeScript) so they at least get raw event publishing.
+2. Show the user the recommended list and the full menu of unmapped options. Ask: **"Which integrations should I wire up? Pick all that apply."** Default-select the recommended ones. When `gateway` is recommended, tell the user in one line what it buys them: observability plus inline moderation and spend policies with zero instrumentation, by changing one `base_url`. When `sentry` is recommended, note that it reuses their existing Sentry client by changing only the DSN.
+3. If the user picks none and `frameworks[]`, `providers[]`, and `errorTracking[]` were all empty, default to `gateway` if any provider client was detected, otherwise `custom` (Python) or `ts-custom` (TypeScript) so they at least get raw event publishing.
 
 Hold the user's selection as `INTEGRATIONS=()` (bash-style array of sub-skill names). Order: agent frameworks first, log forwarders last (so the project boots logging after the agent client exists).
 
@@ -128,7 +176,7 @@ Hold the user's selection as `INTEGRATIONS=()` (bash-style array of sub-skill na
 
 Before checking environment variables, inspect the tools connected to the current coding session. If an axonpush MCP server exposes `provision_app`, prefer it. Do not ask the user to sign in again and do not request a general-purpose API key.
 
-Build the channel suggestions from `INTEGRATIONS[]` using the same rules as step 4b: agent frameworks → `agent-events`, log forwarders → `app-logs`, OTel → `otel-traces`; de-duplicate them and fall back to `default-channel`. Suggest the sanitized project-directory name for the app. Ask the user to confirm or edit the app name and channel list, enforcing the five-character minimum, then call:
+Build the channel suggestions from `INTEGRATIONS[]` using the same rules as step 4b: agent frameworks → `agent-events`, log forwarders → `app-logs`, OTel → `otlp-traces`, Sentry → `errors`; de-duplicate them and fall back to `default-channel`. The gateway needs no channel (it routes by app), so it contributes none. Suggest the sanitized project-directory name for the app. Ask the user to confirm or edit the app name and channel list, enforcing the five-character minimum, then call:
 
 ```text
 provision_app({ appName, channelNames, environment? })
@@ -236,7 +284,9 @@ Now decide which channels this project needs. **A project usually wants more tha
 |---|---|
 | Any agent framework (langchain, crewai, anthropic, etc.) | `agent-events` |
 | Any log forwarder (logging, loguru, pino, winston, console, structlog) | `app-logs` |
-| `otel-python` / `otel-ts` | `otel-traces` |
+| `otel-python` / `otel-ts` | `otlp-traces` (an app-scoped key also auto-creates `otlp-traces`/`otlp-logs` on first use) |
+| `sentry` | `errors` |
+| `gateway` | none (routes by app, not channel) |
 | Webhooks/external events expected | `webhooks-in` |
 | User explicitly wants just one | `default-channel` |
 
@@ -309,9 +359,15 @@ Pass this context into every sub-skill's execution (state it out loud at the top
 
 If a sub-skill fails (e.g. requires a package not installable in the user's lockfile), report the failure, skip it, and continue with the rest. Don't abort the whole orchestrator.
 
-The `gateway` sub-skill is the exception to the channel-publishing model: it does not publish events itself, it reroutes the project's provider traffic through the axonpush gateway using `AXONPUSH_API_KEY` as the `x-axonpush-api-key` header. Pass it `language`, the provider in use (openai or anthropic), and `AXONPUSH_API_KEY`; channel ids do not apply to it.
+Three sub-skills do not follow the channel-publishing model:
+
+- **`gateway`** reroutes provider traffic through the axonpush gateway using `AXONPUSH_API_KEY` as the `x-axonpush-api-key` header. Pass it `language`, the providers in use, and `AXONPUSH_API_KEY`. It captures spans by app, so channel ids do not apply. Apply the base-url swap at **every** provider call site you found in the inventory, not just the first.
+- **`sentry`** changes the existing Sentry client's DSN to `https://<AXONPUSH_API_KEY>@<host>/<PRIMARY_CHANNEL_ID>`. Pass it `language`, `AXONPUSH_API_KEY`, and the channel id to use (the `errors` channel if you created one, else the primary). Warn about the environment-slug trap (a Sentry `environment` that is not a registered axonpush slug is rejected).
+- **`otel-python` / `otel-ts`** with Path A (stock OTLP exporter) authenticate with `AXONPUSH_API_KEY` via the `X-API-Key` header and an app-scoped key auto-routes; Path B (`AxonPushSpanExporter`) publishes to `AXONPUSH_CHANNEL_ID`. Pass both so the sub-skill can pick.
 
 ## Step 7 — Verify with a real test event
+
+The generic test event below proves credentials and ingest work. It does **not** prove each pillar is wired, that is Step 7b. Run both. "The code looks correct" is not verification.
 
 After all sub-skills finish, prove the wiring end-to-end by **publishing a real test event via the API** and **reading it back** to confirm receipt. Do not just print a command for the user — run it yourself.
 
@@ -361,7 +417,25 @@ node -e "import('@axonpush/sdk').then(({AxonPush}) => new AxonPush().events.publ
 bun -e "import {AxonPush} from '@axonpush/sdk'; await new AxonPush().events.publish({channelId: process.env.AXONPUSH_CHANNEL_ID, identifier: 'from-my-code', payload: {ok: true}})"
 ```
 
-End with a brief summary (3–5 bullets): which integrations were wired, which channels were created/reused, the test-event result, and what command the user should run next to exercise their real agent.
+## Step 7b: Verify each pillar actually ingests
+
+The generic event only proves the credential. For every pillar you wired, exercise the real path and confirm data lands. Run these yourself where you can; where running the user's app is not possible, say so plainly and give the exact command for them to run.
+
+- **Gateway**: make one real provider call through the swapped client (or `curl` the gateway with a tiny body). Confirm a new span appears in the app's Observe view (via MCP `search_events`/traces, or the dashboard). The provider response must be unchanged. If the call 404s upstream, the OpenAI base URL is missing `/v1`. If the call works but nothing lands, the `x-axonpush-api-key` header is missing or wrong.
+- **OTLP**: run the instrumented service (or send a stock OTLP export). A quick `curl -i` to `https://<host>/v1/traces` with `X-API-Key` and a minimal `resourceSpans` body should return `200 {}` and the `x-axonpush-resolved-environment` / `x-axonpush-resolved-via` headers, which confirm routing. Then confirm the span appears.
+- **Sentry**: trigger one exception or `capture_message`. A `200 {"id": …}` means accepted; look for the `agent.error` in Observe. A `403 "sentry ingest is not enabled"` means the deployment flag is off; a `400 env_override_forbidden` is the environment-slug trap.
+- **Framework / log sub-skills**: run the smallest entry point that exercises the agent or emits a log, and confirm the events arrive on their channel.
+
+Then, if more than one pillar is live, confirm **correlation**: exercise one request that touches two pillars (e.g. a gateway call inside a Sentry-traced request) and check the two events share a trace id in the trace view. If they do not, the calling code is not propagating a trace context, note it honestly rather than claiming full correlation. To make it correlate, run the axonpush SDK's trace context (`get_or_create_trace()` / `getOrCreateTrace()`) around the request, and propagate the W3C `traceparent` header across service boundaries.
+
+## Step 7c: Report a coverage summary
+
+End with a concise coverage summary, not just "done". Give:
+
+1. A per-service (or per-call-site) table: `service | language | pillar(s) wired | verified?`. Mark each pillar `landed`, `wired but unverified`, or `skipped (reason)`. Be honest, an unverified pillar is not a verified one.
+2. Which channels were created or reused, and the test-event result.
+3. Any call site you could **not** cover and why (e.g. a Bedrock SDK with no swappable base URL, a service you did not have creds to run, a Sentry deployment with ingest disabled).
+4. The next command the user should run to exercise their real agent, and the dashboard link `https://app.axonpush.xyz/apps/<appId>`.
 
 ## Step 8 — Offer a tailored dashboard (optional)
 

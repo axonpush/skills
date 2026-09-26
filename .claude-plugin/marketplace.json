@@ -33,7 +33,9 @@
         "openai-agents",
         "vercel-ai",
         "mastra",
-        "opentelemetry"
+        "opentelemetry",
+        "sentry",
+        "otlp"
       ]
     }
   ]

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# detect.sh — detect language, package manager, AI frameworks, and log libraries.
+# detect.sh — detect language, package manager, AI frameworks, log libraries,
+# raw provider clients (gateway candidates), and error-tracking SDKs.
 # Usage: bash detect.sh [dir]
 # Outputs JSON to stdout:
-#   { "language": "...", "packageManager": "...", "frameworks": [...], "logLibraries": [...] }
+#   { "language": "...", "packageManager": "...", "frameworks": [...],
+#     "logLibraries": [...], "providers": [...], "errorTracking": [...] }
 
 set -euo pipefail
 
@@ -200,10 +202,53 @@ fi
 
 log_libs_json=$(printf '%s\n' "${log_libs[@]}" | jq -R . | jq -s .)
 
+# ---- provider client detection (gateway candidates) -------------------------
+# Raw provider SDKs whose base_url can be pointed at the axonpush gateway with
+# no in-process instrumentation. These drive the "gateway" recommendation.
+declare -a providers=()
+if [[ "$language" == "python" || "$language" == "both" ]]; then
+  py_match "openai"        && providers+=("openai")
+  py_match "anthropic"     && providers+=("anthropic")
+  py_match "litellm"       && providers+=("litellm")
+  { py_match "google-genai" || py_match "google-generativeai"; } && providers+=("google")
+  py_match "mistralai"     && providers+=("mistral")
+  py_match "cohere"        && providers+=("cohere")
+fi
+if [[ "$language" == "typescript" || "$language" == "both" ]]; then
+  ts_match "openai"                          && providers+=("openai")
+  ts_match "@anthropic-ai/sdk"               && providers+=("anthropic")
+  ts_match "@azure/openai"                   && providers+=("azure-openai")
+  ts_match "@aws-sdk/client-bedrock-runtime" && providers+=("bedrock")
+  { ts_match "@google/genai" || ts_match "@google/generative-ai"; } && providers+=("google")
+  ts_match "@mistralai/mistralai"            && providers+=("mistral")
+  ts_match "cohere-ai"                       && providers+=("cohere")
+fi
+if (( ${#providers[@]} > 0 )); then
+  providers_json=$(printf '%s\n' "${providers[@]}" | awk '!seen[$0]++' | jq -R . | jq -s .)
+else
+  providers_json='[]'
+fi
+
+# ---- error-tracking detection (Sentry pillar) -------------------------------
+declare -a error_tracking=()
+if [[ "$language" == "python" || "$language" == "both" ]]; then
+  py_match "sentry-sdk" && error_tracking+=("sentry")
+fi
+if [[ "$language" == "typescript" || "$language" == "both" ]]; then
+  ts_match_prefix "@sentry/" && error_tracking+=("sentry")
+fi
+if (( ${#error_tracking[@]} > 0 )); then
+  error_tracking_json=$(printf '%s\n' "${error_tracking[@]}" | awk '!seen[$0]++' | jq -R . | jq -s .)
+else
+  error_tracking_json='[]'
+fi
+
 # ---- emit JSON --------------------------------------------------------------
 jq -n \
   --arg language "$language" \
   --arg packageManager "$packageManager" \
   --argjson frameworks "$frameworks_json" \
   --argjson logLibraries "$log_libs_json" \
-  '{language: $language, packageManager: $packageManager, frameworks: $frameworks, logLibraries: $logLibraries}'
+  --argjson providers "$providers_json" \
+  --argjson errorTracking "$error_tracking_json" \
+  '{language: $language, packageManager: $packageManager, frameworks: $frameworks, logLibraries: $logLibraries, providers: $providers, errorTracking: $errorTracking}'

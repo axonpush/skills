@@ -14,10 +14,14 @@ framework-specific integration, whichever fits.
 ## What axonpush gives you
 
 - **Zero-instrumentation gateway.** Point your OpenAI or Anthropic
-  `base_url` at the axonpush gateway (`/gw/openai` or `/gw/anthropic`) and
+  `base_url` at the axonpush gateway (`/gw/openai/v1` or `/gw/anthropic`) and
   add an `x-axonpush-api-key` header. No SDK or framework needed. Every
   call, including tool calls and agent handoffs, is captured as a queryable
   span.
+- **Bring in the rest of the trace.** Point an existing OpenTelemetry
+  exporter at axonpush (`/v1/traces`, `/v1/logs`) for HTTP/DB/queue spans, and
+  an existing Sentry SDK's DSN at axonpush for exceptions and issues. All three
+  paths, gateway, OTLP, and Sentry, correlate on one trace.
 - **Tool-call and handoff observability.** Tool calls appear as spans with
   the tool name, arguments, and outcome. Analytics break down by agent and
   by tool, with agent, tool, and semantic-kind event filters.
@@ -85,6 +89,7 @@ your app emits, and save a dashboard tailored to it over the axonpush MCP.
 | `axonpush-integrate` | – | Orchestrator. Detects project, signs in, creates app/channel, delegates. |
 | `axonpush-tailor-dashboard` | – | Scans the backend, discovers/instruments business dimensions, and authors a dashboard tailored to the project over the axonpush MCP. |
 | `gateway` | any | Zero-instrumentation gateway. Change one `base_url` plus a header; captures every call, tool call, and handoff, and runs moderation and spend policies inline. |
+| `sentry` | any | Point an existing Sentry SDK's DSN at axonpush; exceptions, issues, transactions, and logs land on the same trace. |
 | `anthropic` | Python | Anthropic SDK message tracing. |
 | `crewai` | Python | CrewAI crew, agent, tool, and task callbacks. |
 | `custom` | Python | Direct event publishing for unsupported frameworks. |
@@ -104,9 +109,10 @@ your app emits, and save a dashboard tailored to it over the axonpush MCP.
 | `otel-ts` | TypeScript | `AxonPushSpanExporter` for a Node `TracerProvider`. |
 
 Every framework sub-skill fetches the matching section of the live SDK
-README at runtime to stay in sync with `axonpush-python` /
-`axonpush-ts` `master`. Static reference code in each `SKILL.md` is the
-offline fallback.
+README at runtime to stay in sync with the `axonpush/sdks` monorepo
+(`packages/python`, `packages/typescript`, `packages/dotnet`; published as
+`axonpush` on PyPI and `@axonpush/sdk` on npm). Static reference code in each
+`SKILL.md` is the offline fallback.
 
 ## Local development
 

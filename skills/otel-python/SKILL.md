@@ -1,76 +1,68 @@
 ---
 name: otel-python
-description: Attach `AxonPushSpanExporter` to a Python project's OpenTelemetry `TracerProvider` so every OTel span is forwarded to AxonPush. Use for any service already instrumented with OpenTelemetry that wants its spans mirrored to AxonPush.
+description: Forward a Python service's OpenTelemetry spans and logs into axonpush, either by pointing the stock OTLP exporter at the axonpush OTLP endpoint (no code) or by attaching AxonPushSpanExporter to the existing TracerProvider (adds agent attributes). Use for any Python service already instrumented with OpenTelemetry.
 ---
+
+# axonpush + OpenTelemetry (Python)
+
+axonpush speaks OTLP/HTTP natively, so a service that already emits OpenTelemetry needs no new SDK. There are two paths; pick per the project, and they can coexist.
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying, fetch the current SDK monorepo README to catch any recent API change:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- `https://raw.githubusercontent.com/axonpush/sdks/HEAD/README.md` (source under `packages/python`)
 
-Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
+The published package is **`axonpush`** on PyPI. Ignore the archived `axonpush/python-sdk` repo, it is stale and still resolves. If the fetch fails (offline, rate-limited), use the static reference below.
 
-# AxonPush + OpenTelemetry (Python) Integration
+## Path A: stock OTLP exporter (no axonpush package, recommended when already instrumented)
 
-Forward OpenTelemetry spans from a Python service into AxonPush via `AxonPushSpanExporter`.
+Point the standard OpenTelemetry `otlphttp` exporter at axonpush. Nothing about the application changes except one exporter block or a few environment variables.
 
-## What gets added
-
-- `AxonPushSpanExporter` attached to the project's `TracerProvider` through a `BatchSpanProcessor`
-- Every OTel span is re-emitted as an `app.span` event with full trace_id, span_id, attributes, events, and links preserved
-
-## Install
-
-Requires the `otel` extra, installed from the latest GitHub commit:
+The endpoint is the bare host; the exporter appends `/v1/traces` and `/v1/logs` itself. Auth is an axonpush API key in the `X-API-Key` header.
 
 ```bash
-uv add "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"
-# or: pip install "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"
-# or: poetry add "git+https://github.com/axonpush/python-sdk.git#egg=axonpush[otel]"
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://api.axonpush.xyz"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_EXPORTER_OTLP_HEADERS="X-API-Key=$AXONPUSH_API_KEY"
+# Optional: pin the environment slug (must exist on the tenant).
+# export OTEL_EXPORTER_OTLP_HEADERS="X-API-Key=$AXONPUSH_API_KEY,X-Axonpush-Environment=prod"
 ```
 
-## Reference Code — New Provider
-
-Use this path when the project does **not** already have a `TracerProvider`.
+Or in code, per signal:
 
 ```python
 import os
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from axonpush import AxonPush
-from axonpush.integrations.otel import AxonPushSpanExporter
-
-axonpush_client = AxonPush(
-    api_key=os.environ["AXONPUSH_API_KEY"],
-    tenant_id=os.environ["AXONPUSH_TENANT_ID"],
-    base_url=os.environ.get("AXONPUSH_BASE_URL", "https://api.axonpush.xyz"),
+exporter = OTLPSpanExporter(
+    endpoint="https://api.axonpush.xyz/v1/traces",  # explicit path in per-signal mode
+    headers={"X-API-Key": os.environ["AXONPUSH_API_KEY"]},
 )
-
-provider = TracerProvider(resource=Resource.create({"service.name": "my-service"}))
-provider.add_span_processor(
-    BatchSpanProcessor(
-        AxonPushSpanExporter(
-            client=axonpush_client,
-            channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
-            service_name="my-service",
-        )
-    )
-)
-trace.set_tracer_provider(provider)
-
-tracer = trace.get_tracer(__name__)
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(exporter))
 ```
 
-## Reference Code — Existing Provider
+**Routing**: an **app-scoped** API key auto-routes, `/v1/traces` to a channel named `otlp-traces` and `/v1/logs` to `otlp-logs`, both created in the key's app on first use. A key with no app returns `400` (nothing to route into): pin the key to an app, or add `X-Axonpush-Channel: <channelId>` to name a channel explicitly. A public `pt_…` token always needs `X-Axonpush-Channel`.
 
-Use this path when the project already calls `trace.set_tracer_provider(...)` or uses an auto-instrumentation entrypoint. Never register a second global provider — attach to the existing one.
+This path forwards raw OTel spans. It has no field for agent semantics (`agent.tool_call.start`, `agent.handoff`), use Path B or a framework sub-skill for those.
+
+## Path B: AxonPushSpanExporter (adds agent attributes)
+
+Use this when you want the same spans to carry axonpush agent attributes, or you already build the client for other axonpush features. It writes through the events API, not `/v1/traces`.
+
+Install the `otel` extra:
+
+```bash
+uv add "axonpush[otel]"   # or: pip install "axonpush[otel]"  /  poetry add "axonpush[otel]"
+```
+
+If a `TracerProvider` already exists in the project, **attach to it**, never register a second global provider:
 
 ```python
+import os
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -83,7 +75,11 @@ if isinstance(provider, TracerProvider):
     provider.add_span_processor(
         BatchSpanProcessor(
             AxonPushSpanExporter(
-                client=AxonPush(api_key=os.environ["AXONPUSH_API_KEY"], tenant_id=os.environ["AXONPUSH_TENANT_ID"]),
+                client=AxonPush(
+                    api_key=os.environ["AXONPUSH_API_KEY"],
+                    tenant_id=os.environ["AXONPUSH_TENANT_ID"],
+                    base_url=os.environ.get("AXONPUSH_BASE_URL", "https://api.axonpush.xyz"),
+                ),
                 channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
                 service_name="my-service",
             )
@@ -91,27 +87,24 @@ if isinstance(provider, TracerProvider):
     )
 ```
 
-## Steps
+When no provider exists yet, create one with `TracerProvider(resource=Resource.create({"service.name": "my-service"}))`, add the same processor, then `trace.set_tracer_provider(provider)`.
 
-1. Install `axonpush[otel]` from the latest GitHub commit -- e.g. `uv add "axonpush[otel] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
-2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_BASE_URL`, `AXONPUSH_CHANNEL_ID` to `.env`
-3. Detect whether a `TracerProvider` already exists in the project (search for `set_tracer_provider`, `TracerProvider(`, or auto-instrumentation setup in the main module)
-4. If one exists, attach `AxonPushSpanExporter` to it via `BatchSpanProcessor`
-5. If none exists, create one (see "New Provider") using the project name as `service.name`
-6. Use `BatchSpanProcessor`, never `SimpleSpanProcessor`, in production
+Use `BatchSpanProcessor`, never `SimpleSpanProcessor`, in production.
 
-## Fail-Open
+## Which path
 
-`AxonPush(fail_open=True)` is the default. If AxonPush is unreachable the exporter silently drops spans — no application impact.
+Path A is simpler and touches no application code; take it when the service is already instrumented and you only have spans/logs. Path B is right when you want agent attributes on the spans or already run the axonpush SDK. Both end in the same store and the same trace, so a large service commonly uses Path A for its HTTP/DB layers and a framework sub-skill (or Path B) around the agent.
 
-## Common Pitfalls
+## Correlation
 
-### Environment slug must match a registered tenant environment
+OTel spans join gateway spans and Sentry events on one trace when they share a trace id. axonpush maps an OTel 32-hex trace id to and from its own UUID4 trace id deterministically, so if two services both run OTel and let the standard W3C propagators carry `traceparent`, their spans land in the same axonpush trace with no manual work. Across a non-OTel boundary, propagate `traceparent` yourself.
 
-If you set `AXONPUSH_ENVIRONMENT`, the value has to match a slug already registered for the tenant (visit the Environments page in the AxonPush dashboard). Passing your application's own env name (e.g. `"development"` or `"production"`) when the tenant only has `dev` / `staging` / `prod` configured causes the server to reject every publish. The SDK's background publisher logs this at ERROR (`axonpush publish rejected by server: ... [code=...]`); look there if events stop flowing after deploy.
+## Fail-open
 
-Either omit `AXONPUSH_ENVIRONMENT` (the server treats unset as the tenant default) or set it to one of the configured slugs.
+`AxonPush(fail_open=True)` is the default, and the stock OTLP exporter drops on failure by design. If axonpush is unreachable, spans are dropped, never blocking the application.
 
-### Self-instrumentation amplification (resolved in axonpush ≥ 0.0.12)
+## Common pitfalls
 
-OTel's `HTTPXClientInstrumentor` previously created a span for every SDK publish, which the exporter would publish, generating another span, etc. The SDK now suppresses OTel instrumentation around its own httpx requests (sets the `suppress_instrumentation` and `suppress_http_instrumentation` context keys), so this is handled automatically — no `OTEL_PYTHON_HTTPX_EXCLUDED_URLS` workaround needed for axonpush ≥ 0.0.12.
+**Environment slug must match a registered tenant environment.** If you set `X-Axonpush-Environment` / `AXONPUSH_ENVIRONMENT`, it must match a slug already registered for the tenant (Environments page in the dashboard). An unknown slug is rejected. Omit it to use the tenant default. Confirm from `curl` via the `x-axonpush-resolved-environment` and `x-axonpush-resolved-via` response headers.
+
+**Self-instrumentation amplification (resolved in axonpush ≥ 0.0.12).** The SDK now suppresses OTel instrumentation around its own httpx requests, so the Path B exporter no longer creates a span per publish. No `OTEL_PYTHON_HTTPX_EXCLUDED_URLS` workaround is needed.
