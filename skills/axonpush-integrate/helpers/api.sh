@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# api.sh — thin AxonPush REST client.
+# api.sh: thin axonpush REST client.
 # Usage:
 #   bash api.sh list-apps
 #   bash api.sh create-app <name>
@@ -37,7 +37,7 @@ shift || true
 case "$cmd" in
   ""|-h|--help|help)
     cat >&2 <<EOF
-api.sh — AxonPush REST client.
+api.sh: axonpush REST client.
 
 Commands:
   list-apps
@@ -86,7 +86,7 @@ req() {
   elif echo "$payload" | jq -e . >/dev/null 2>&1; then
     echo "$payload" | jq .
   else
-    # Non-JSON success body — pass through verbatim.
+    # Non-JSON success body: pass through verbatim.
     printf '%s\n' "$payload"
   fi
 }
@@ -108,14 +108,14 @@ case "$cmd" in
     app_id="${1:-}"
     [[ -z "$app_id" ]] && { echo "api.sh: list-app <appId>" >&2; exit 2; }
     apps=$(req GET /apps)
-    # App identifiers are UUID strings — match against both .id and .appId.
-    match=$(echo "$apps" | jq --arg id "$app_id" 'map(select(.id == $id or .appId == $id)) | .[0] // empty')
+    # App identifiers are UUID strings; match against both .id and .appId.
+    match=$(echo "$apps" | jq --arg id "$app_id" '(.apps // .) | map(select(.id == $id or .appId == $id)) | .[0] // empty')
     if [[ -z "$match" || "$match" == "null" ]]; then
       echo "api.sh: app not found: $app_id" >&2
       exit 1
     fi
     # GET /apps/<id> includes channels[]; fetch by .id (UUID) for accuracy.
-    real_id=$(echo "$match" | jq -r '.id')
+    real_id=$(echo "$match" | jq -r '.appId // .id')
     req GET "/apps/${real_id}"
     ;;
   create-channel)
@@ -125,8 +125,9 @@ case "$cmd" in
       echo "api.sh: channel name must be at least 5 characters (got ${#name}: '$name')" >&2
       exit 2
     fi
-    # Backend DTO requires appId as a string — use --arg, not --argjson.
-    req POST /channel "$(jq -n --arg name "$name" --arg appId "$app_id" '{name: $name, appId: $appId}')"
+    # App scope is carried by the route; the generated create DTO accepts name only.
+    encoded_app=$(jq -rn --arg value "$app_id" '$value | @uri')
+    req POST "/apps/${encoded_app}/channels" "$(jq -n --arg name "$name" '{name: $name}')"
     ;;
   publish-event)
     channel_id="${1:-}"; identifier="${2:-}"; payload="${3:-}"
@@ -143,7 +144,12 @@ case "$cmd" in
   list-events)
     channel_id="${1:-}"; limit="${2:-10}"
     [[ -z "$channel_id" ]] && { echo "api.sh: list-events <channelId> [limit]" >&2; exit 2; }
-    req GET "/event/${channel_id}/list?limit=${limit}"
+    if ! [[ "$limit" =~ ^[0-9]+$ ]] || (( limit < 1 || limit > 500 )); then
+      echo "api.sh: limit must be 1-500" >&2
+      exit 2
+    fi
+    encoded_channel=$(jq -rn --arg value "$channel_id" '$value | @uri')
+    req GET "/events?channelId=${encoded_channel}&limit=${limit}"
     ;;
   *)
     echo "api.sh: unknown command '$cmd'" >&2

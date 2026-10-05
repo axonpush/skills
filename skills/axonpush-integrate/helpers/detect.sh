@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# detect.sh — detect language, package manager, AI frameworks, log libraries,
-# raw provider clients (gateway candidates), and error-tracking SDKs.
+# detect.sh: detect language, package manager, AI frameworks, log libraries,
+# raw provider clients (instrumentation candidates), and error-tracking SDKs.
 # Usage: bash detect.sh [dir]
 # Outputs JSON to stdout:
 #   { "language": "...", "packageManager": "...", "frameworks": [...],
@@ -61,7 +61,7 @@ fi
 py_deps_file=$(mktemp); ts_deps_file=$(mktemp)
 trap 'rm -f "$py_deps_file" "$ts_deps_file"' EXIT
 
-# Parse pyproject.toml with Python's stdlib `tomllib` (3.11+) — proper TOML,
+# Parse pyproject.toml with Python's stdlib `tomllib` (3.11+): proper TOML,
 # covering [project] deps, optional-dependencies, PEP 735 [dependency-groups],
 # and poetry. Prints one lowercase base package name per line.
 read_py_deps_tomllib() {
@@ -193,7 +193,7 @@ if [[ "$language" == "typescript" ]]; then
   ts_match "bunyan"  && log_libs+=("bunyan")
   log_libs+=("console")
 else
-  # python (or both — orchestrator decides; default to python log libs)
+  # python (or both: orchestrator decides; default to python log libs)
   py_match "loguru"   && log_libs+=("loguru")
   py_match "structlog" && log_libs+=("structlog")
   log_libs+=("logging")
@@ -202,9 +202,8 @@ fi
 
 log_libs_json=$(printf '%s\n' "${log_libs[@]}" | jq -R . | jq -s .)
 
-# ---- provider client detection (gateway candidates) -------------------------
-# Raw provider SDKs whose base_url can be pointed at the axonpush gateway with
-# no in-process instrumentation. These drive the "gateway" recommendation.
+# ---- provider client detection (instrumentation candidates) -------------------------
+# Provider SDKs whose calls need passive span metadata. Routing is unchanged.
 declare -a providers=()
 if [[ "$language" == "python" || "$language" == "both" ]]; then
   py_match "openai"        && providers+=("openai")

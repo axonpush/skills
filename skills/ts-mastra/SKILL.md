@@ -1,20 +1,20 @@
 ---
 name: ts-mastra
-description: Wire AxonPush tracing into a TypeScript Mastra project via `AxonPushMastraHooks`. Use when the user wants tool and workflow lifecycle events (start, end, error) from a Mastra workflow or agent.
+description: Wire axonpush tracing into a TypeScript Mastra project via `AxonPushMastraHooks`. Use when the user wants tool and workflow lifecycle events (start, end, error) from a Mastra workflow or agent.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + Mastra Integration
+# axonpush + Mastra Integration
 
-Integrate AxonPush tracing into a project using Mastra.
+Integrate axonpush tracing into a project using Mastra.
 
 ## What gets added
 
@@ -49,7 +49,7 @@ const hooks = new AxonPushMastraHooks({
 
 ## Steps
 
-1. Install `@axonpush/sdk` from the latest GitHub commit -- e.g. `npm install github:axonpush/ts-sdk` (or the `pnpm add`/`bun add`/`yarn add` equivalent)
+1. Install `@axonpush/sdk` with the project's package manager, e.g. `npm install @axonpush/sdk` (or the `pnpm add`/`bun add`/`yarn add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main workflow or agent entry point
 4. Add imports and create the hooks instance
@@ -57,4 +57,4 @@ const hooks = new AxonPushMastraHooks({
 
 ## Fail-Open
 
-The SDK is fail-open by default (`failOpen: true`). If AxonPush is unreachable, hook calls are silently suppressed.
+The SDK is fail-open by default (`failOpen: true`). If axonpush is unreachable, hook calls are silently suppressed.

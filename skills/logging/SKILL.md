@@ -1,23 +1,23 @@
 ---
 name: logging
-description: Forward Python stdlib `logging` (and Django's `LOGGING` dict-config) records into AxonPush as structured events. Wires an `AxonPushLoggingHandler` into the root logger or a named logger so existing `logger.info(...)` / `logger.error(...)` calls publish events without code rewrites. Use when the project uses Python's `logging` module, including Django, Flask, or FastAPI projects with stdlib logging.
+description: Forward Python stdlib `logging` (and Django's `LOGGING` dict-config) records into axonpush as structured events. Wires an `AxonPushLoggingHandler` into the root logger or a named logger so existing `logger.info(...)` / `logger.error(...)` calls publish events without code rewrites. Use when the project uses Python's `logging` module, including Django, Flask, or FastAPI projects with stdlib logging.
 ---
 
-# AxonPush + Python `logging` integration
+# axonpush + Python `logging` integration
 
 Wires `axonpush.integrations.logging_handler.AxonPushLoggingHandler` into the user's existing Python logging config. Works for plain stdlib `logging`, Django's `LOGGING` dict-config, Flask's `app.logger`, and FastAPI/Uvicorn loggers.
 
 ## Reference (live)
 
-Before applying, fetch the latest README from the SDK repo:
-- `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
+Before applying, fetch the latest README from the `axonpush/sdks` monorepo:
+- `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
 - Specifically the "Logging integrations" section.
 
 If the fetch fails, use the static reference below.
 
 ## What gets added
 
-- `AxonPushLoggingHandler` attached to the appropriate logger (root, or a named one for Django). It reads `AXONPUSH_*` credentials from the environment and auto-excludes AxonPush's own loggers, so it can't feed back on itself.
+- `AxonPushLoggingHandler` attached to the appropriate logger (root, or a named one for Django). It reads `AXONPUSH_*` credentials from the environment and auto-excludes axonpush's own loggers, so it can't feed back on itself.
 - Each log record becomes an event with `eventType: "app.log"`, `identifier: <logger_name>`, and `payload: { level, message, args, exc_info, extra }`.
 - Channel + app + tenant come from `AXONPUSH_*` env vars (already in the project's `.env` from the orchestrator).
 
@@ -54,7 +54,7 @@ LOGGING = {
 }
 ```
 
-Importing the handler is enough — `axonpush` does not need to be in `INSTALLED_APPS`.
+Importing the handler is enough; `axonpush` does not need to be in `INSTALLED_APPS`.
 
 ## Verify
 

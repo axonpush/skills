@@ -1,9 +1,9 @@
 {
   "name": "axonpush",
-  "version": "0.0.8",
-  "description": "axonpush agent observability and control skills. Zero instrumentation: change one base_url to route OpenAI or Anthropic traffic through the axonpush gateway, capture every call, tool call, and handoff as a span, and run inline moderation and spend policies. Stamp custom business attributes to get discoverable dimensions, and let your coding agent author a dashboard tailored to your domain over MCP. Also wires framework-native tracing (LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, OTel) when you want in-process events.",
+  "version": "0.0.9",
+  "description": "Passive, metadata-only observability for agent and business operations. Your coding agent connects the axonpush MCP, builds a workspace spec for your app (data dictionary, entities, views, funnels, alerts), mints a publish-only key with workspaces_connect, and wires observe/identify calls plus OTLP, framework or Sentry telemetry.",
   "author": {
-    "name": "AxonPush",
+    "name": "axonpush",
     "url": "https://axonpush.xyz"
   },
   "homepage": "https://github.com/axonpush/skills",
@@ -15,9 +15,6 @@
   "keywords": [
     "axonpush",
     "observability",
-    "control",
-    "gateway",
-    "moderation",
     "tracing",
     "analytics",
     "dashboards",
@@ -30,6 +27,11 @@
     "mastra",
     "opentelemetry",
     "sentry",
-    "otlp"
+    "otlp",
+    "agent-operations",
+    "workspaces",
+    "lifecycle",
+    "mcp",
+    "profiles"
   ]
 }

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# env.sh — idempotently set KEY=VALUE pairs in .env.local (preferred) or .env.
+# env.sh: idempotently set KEY=VALUE pairs in .env.local (preferred) or .env.
 # Usage: bash env.sh KEY1=val1 KEY2=val2 ...
 #
-# Behavior:
+# Behaviour:
 #   - Picks .env.local if it exists, else .env (creates it if missing).
 #   - For each KEY=VALUE arg: replace existing `KEY=...` line, or append.
 #   - Quotes values only if they contain whitespace or shell-special chars.

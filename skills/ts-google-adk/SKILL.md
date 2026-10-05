@@ -1,20 +1,20 @@
 ---
 name: ts-google-adk
-description: Wire AxonPush tracing into a TypeScript project using the Google AI Development Kit (ADK). Use when the user wants agent, model, and tool lifecycle events from an ADK agent.
+description: Wire axonpush tracing into a TypeScript project using the Google AI Development Kit (ADK). Use when the user wants agent, model, and tool lifecycle events from an ADK agent.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + Google ADK Integration
+# axonpush + Google ADK Integration
 
-Integrate AxonPush tracing into a project using the Google AI Development Kit.
+Integrate axonpush tracing into a project using the Google AI Development Kit.
 
 ## What gets added
 
@@ -50,7 +50,7 @@ const callbacks = axonPushADKCallbacks({
 
 ## Steps
 
-1. Install `@axonpush/sdk` from the latest GitHub commit -- e.g. `npm install github:axonpush/ts-sdk` (or the `pnpm add`/`bun add`/`yarn add` equivalent)
+1. Install `@axonpush/sdk` with the project's package manager, e.g. `npm install @axonpush/sdk` (or the `pnpm add`/`bun add`/`yarn add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main file where the ADK agent is configured
 4. Add imports and create the callbacks
@@ -58,4 +58,4 @@ const callbacks = axonPushADKCallbacks({
 
 ## Fail-Open
 
-The SDK is fail-open by default (`failOpen: true`). If AxonPush is unreachable, callbacks are silently suppressed.
+The SDK is fail-open by default (`failOpen: true`). If axonpush is unreachable, callbacks are silently suppressed.

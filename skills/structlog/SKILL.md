@@ -1,13 +1,13 @@
 ---
 name: structlog
-description: Forward `structlog` log records into AxonPush as structured events. Adds an `AxonpushProcessor` to the structlog processor chain. Use when the Python project uses structlog (detected by `structlog` in pyproject.toml or requirements.txt).
+description: Forward `structlog` log records into axonpush as structured events. Adds an `AxonpushProcessor` to the structlog processor chain. Use when the Python project uses structlog (detected by `structlog` in pyproject.toml or requirements.txt).
 ---
 
-# AxonPush + structlog integration
+# axonpush + structlog integration
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md` — "structlog" section.
+`https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`, "structlog" section.
 
 ## What gets added
 

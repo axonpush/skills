@@ -1,12 +1,12 @@
 {
   "name": "axonpush-plugins",
   "owner": {
-    "name": "AxonPush",
+    "name": "axonpush",
     "email": "support@axonpush.xyz",
     "url": "https://axonpush.xyz"
   },
   "metadata": {
-    "description": "axonpush agent observability and control skills. Zero instrumentation via the gateway, plus framework-native tracing, custom-dimension analytics, and agent-authored dashboards."
+    "description": "Passive, metadata-only observability for agent and business operations. Your coding agent connects the axonpush MCP, builds a workspace spec for your app (data dictionary, entities, views, funnels, alerts), mints a publish-only key with workspaces_connect, and wires observe/identify calls plus OTLP, framework or Sentry telemetry."
   },
   "plugins": [
     {
@@ -15,14 +15,12 @@
         "source": "github",
         "repo": "axonpush/skills"
       },
-      "description": "Add axonpush agent observability and control. Route OpenAI or Anthropic traffic through the zero-instrumentation gateway (one base_url change) to capture every call, tool call, and handoff and run inline moderation and spend policies, or wire framework-native tracing for LangChain, CrewAI, Anthropic, OpenAI Agents, Vercel AI, Mastra, LangGraph, LlamaIndex, Google ADK, Deep Agents, OpenTelemetry, or custom frameworks. Stamp custom business attributes for discoverable dimensions, and let your coding agent author a dashboard tailored to your domain over MCP.",
+      "version": "0.0.9",
+      "description": "Passive, metadata-only observability for agent and business operations. Your coding agent connects the axonpush MCP, builds a workspace spec for your app (data dictionary, entities, views, funnels, alerts), mints a publish-only key with workspaces_connect, and wires observe/identify calls plus OTLP, framework or Sentry telemetry.",
       "category": "observability",
       "keywords": [
         "axonpush",
         "observability",
-        "control",
-        "gateway",
-        "moderation",
         "tracing",
         "analytics",
         "dashboards",
@@ -35,7 +33,12 @@
         "mastra",
         "opentelemetry",
         "sentry",
-        "otlp"
+        "otlp",
+        "agent-operations",
+        "workspaces",
+        "lifecycle",
+        "mcp",
+        "profiles"
       ]
     }
   ]

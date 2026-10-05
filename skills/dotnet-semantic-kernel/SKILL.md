@@ -1,25 +1,25 @@
 ---
 name: dotnet-semantic-kernel
-description: Wire AxonPush tracing into a .NET Microsoft Semantic Kernel project via `AddAxonPushTelemetry`. Use when the user wants chat-completion, function-call, and prompt-render lifecycle events from a kernel built with `Kernel.CreateBuilder()` or `Host.CreateApplicationBuilder()`.
+description: Wire axonpush tracing into a .NET Microsoft Semantic Kernel project via `AddAxonPushTelemetry`. Use when the user wants chat-completion, function-call, and prompt-render lifecycle events from a kernel built with `Kernel.CreateBuilder()` or `Host.CreateApplicationBuilder()`.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- `https://raw.githubusercontent.com/AxonPush/axonpush-dotnet/main/README.md`
+- `https://raw.githubusercontent.com/axonpush/sdks/master/packages/dotnet/README.md`
 
 If the fetch fails (offline or rate-limited), fall back to the reference code below.
 
-# AxonPush + Microsoft Semantic Kernel integration
+# axonpush + Microsoft Semantic Kernel integration
 
-Integrate AxonPush tracing into a .NET Semantic Kernel project.
+Integrate axonpush tracing into a .NET Semantic Kernel project.
 
 ## What gets added
 
 - `AxonPushKernelBuilderExtensions.AddAxonPushTelemetry` on `IKernelBuilder` and a sibling extension on `IServiceCollection`.
 - Two `AppContext` switches flipped: `Microsoft.SemanticKernel.Experimental.GenAI.EnableOTelDiagnostics` and (when sensitive-data export is opted in) `...EnableOTelDiagnosticsSensitive`.
-- A registered `TracerProvider` listening to every `Microsoft.SemanticKernel.*` activity source, with the AxonPush exporter attached via a `BatchActivityExportProcessor`.
+- A registered `TracerProvider` listening to every `Microsoft.SemanticKernel.*` activity source, with the axonpush exporter attached via a `BatchActivityExportProcessor`.
 - Spans: `Kernel.InvokeAsync`, `chat.completions <model>` from the OpenAI or Azure OpenAI connector, plus a span per kernel function call. Each carries the OpenTelemetry GenAI semantic-convention attributes (`gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.response.finish_reasons`).
 
 ## Install
@@ -78,7 +78,7 @@ builder.AddAxonPushTelemetry(client => { /* ... */ }, exporter => { /* ... */ },
 1. Add the NuGet package: `dotnet add package AxonPush.SemanticKernel`.
 2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_CHANNEL_ID`, and (optionally) `AXONPUSH_ENVIRONMENT` to the project's secret store. Use `dotnet user-secrets` locally and the host's secret manager (Azure Key Vault, etc.) in production.
 3. Call `builder.AddAxonPushTelemetry(...)` in the same place that constructs the kernel. Do this before any kernel function is invoked so the GenAI diagnostic switches are set before Semantic Kernel JITs its diagnostic helpers.
-4. Verify in the AxonPush UI that spans land on the configured channel within a few seconds of running a chat completion.
+4. Verify in the axonpush UI that spans land on the configured channel within a few seconds of running a chat completion.
 5. Decide whether to enable sensitive-data export. Off by default; only flip it on for environments where it is safe to log raw prompts and completions.
 
 ## Cross-Source Correlation (when both `dotnet-semantic-kernel` and `dotnet-otel` skills are applied)
@@ -98,8 +98,8 @@ using var tracerProvider = Sdk.CreateTracerProviderBuilder()
     .Build();
 ```
 
-Trace identifiers propagate naturally, so an HTTP request span and the Semantic Kernel spans rendered from inside it appear in one waterfall in the AxonPush UI.
+Trace identifiers propagate naturally, so an HTTP request span and the Semantic Kernel spans rendered from inside it appear in one waterfall in the axonpush UI.
 
 ## Fail-Open
 
-The exporter is fail-open by default. If AxonPush is unreachable, export failures are logged at warning level and the OpenTelemetry SDK is told the export succeeded, so the kernel keeps responding to prompts. Set `AXONPUSH_FAIL_OPEN=false` (or `AxonPushOptions.FailOpen = false` in code) to surface failures to callers.
+The exporter is fail-open by default. If axonpush is unreachable, export failures are logged at warning level and the OpenTelemetry SDK is told the export succeeded, so the kernel keeps responding to prompts. Set `AXONPUSH_FAIL_OPEN=false` (or `AxonPushOptions.FailOpen = false` in code) to surface failures to callers.

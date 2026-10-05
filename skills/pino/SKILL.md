@@ -1,13 +1,13 @@
 ---
 name: pino
-description: Forward `pino` log records into AxonPush as structured events. Adds an `axonpush-pino` transport so existing `logger.info(...)` calls publish events. Use when the Node/TypeScript project uses pino (detected by `pino` in package.json).
+description: Forward `pino` log records into axonpush as structured events. Adds an `axonpush-pino` transport so existing `logger.info(...)` calls publish events. Use when the Node/TypeScript project uses pino (detected by `pino` in package.json).
 ---
 
-# AxonPush + pino integration
+# axonpush + pino integration
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "pino" section.
+`https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`, "pino" section.
 
 ## What gets added
 

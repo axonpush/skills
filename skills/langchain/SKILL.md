@@ -1,20 +1,20 @@
 ---
 name: langchain
-description: Wire AxonPush tracing into a Python LangChain or LangGraph project via `AxonPushCallbackHandler`. Use when the user wants chain, LLM, and tool lifecycle events from any chain, agent executor, or LangGraph graph invoked with `.invoke()`.
+description: Wire axonpush tracing into a Python LangChain or LangGraph project via `AxonPushCallbackHandler`. Use when the user wants chain, LLM, and tool lifecycle events from any chain, agent executor, or LangGraph graph invoked with `.invoke()`.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + LangChain Integration
+# axonpush + LangChain Integration
 
-Integrate AxonPush tracing into a LangChain or LangGraph project.
+Integrate axonpush tracing into a LangChain or LangGraph project.
 
 ## What gets added
 
@@ -44,8 +44,8 @@ def _current_otel_trace_id() -> Optional[str]:
     Soft-imports opentelemetry so this helper is harmless when the project
     isn't OTel-instrumented. When OTel is active and a span is in scope
     (e.g. inside a FastAPI request handler under FastAPIInstrumentor), the
-    AxonPush events published from this request share their trace_id with
-    the backend HTTP span — both render in one waterfall in the dashboard.
+    axonpush events published from this request share their trace_id with
+    the backend HTTP span; both render in one waterfall in the dashboard.
     """
     try:
         from opentelemetry import trace
@@ -80,18 +80,18 @@ def axonpush_handler(agent_id: str = "my-agent") -> AxonPushCallbackHandler:
 
 ## Steps
 
-1. Install `axonpush[langchain]` from the latest GitHub commit -- e.g. `uv add "axonpush[langchain] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
+1. Install `axonpush[langchain]` with the project's package manager, e.g. `uv add "axonpush[langchain]"` (or the `pip install`/`poetry add` equivalent)
 2. Add `AXONPUSH_API_KEY`, `AXONPUSH_TENANT_ID`, `AXONPUSH_BASE_URL`, `AXONPUSH_CHANNEL_ID` to `.env`
-3. Pick a single shared module the project already uses for cross-cutting infra (e.g. `app/observability.py`, `app/utils/axonpush.py`). Write the `axonpush_client`, `_current_otel_trace_id`, and `axonpush_handler` definitions there. Do not duplicate the client across files — there should be exactly one `AxonPush(...)` constructor call in the project.
+3. Pick a single shared module the project already uses for cross-cutting infra (e.g. `app/observability.py`, `app/utils/axonpush.py`). Write the `axonpush_client`, `_current_otel_trace_id`, and `axonpush_handler` definitions there. Do not duplicate the client across files; there should be exactly one `AxonPush(...)` constructor call in the project.
 4. At each `.invoke()` / `.ainvoke()` call site, import `axonpush_handler` and pass `config={"callbacks": [axonpush_handler("<descriptive-agent-id>")]}`. Use one agent_id per logical agent (e.g. `"researcher"`, `"writer"`) so the dashboard separates their event lanes.
-5. **Important — call the factory per invocation, not once at import.** `[axonpush_handler()]` (with parens at the call site) reads the current OTel trace_id; `[axonpush_handler]` (no parens) would pass the function object itself, breaking everything. Module-level `handler = AxonPushCallbackHandler(...)` is also wrong for the same reason: it pins to a single (invalid) trace_id forever.
+5. **Important: call the factory per invocation, not once at import.** `[axonpush_handler()]` (with parens at the call site) reads the current OTel trace_id; `[axonpush_handler]` (no parens) would pass the function object itself, breaking everything. Module-level `handler = AxonPushCallbackHandler(...)` is also wrong for the same reason: it pins to a single (invalid) trace_id forever.
 
 ## Cross-Source Correlation (when both `langchain` and `otel-python` skills are applied)
 
-The reference code above already supports this — no extra wiring needed. With the `otel-python` skill in place, FastAPI / Flask / Django auto-instrumentation creates an HTTP span on every request, and `_current_otel_trace_id()` returns that span's trace_id. The LangChain events published by `axonpush_handler()` get tagged with the same trace_id. The AxonPush dashboard renders both lanes in one waterfall.
+The reference code above already supports this, so no extra wiring needed. With the `otel-python` skill in place, FastAPI / Flask / Django auto-instrumentation creates an HTTP span on every request, and `_current_otel_trace_id()` returns that span's trace_id. The LangChain events published by `axonpush_handler()` get tagged with the same trace_id. The axonpush dashboard renders both lanes in one waterfall.
 
-If the project isn't OTel-instrumented, `_current_otel_trace_id()` returns `None`, the SDK auto-generates a fresh trace_id, and you still get a clean per-invocation waterfall — just without the backend span attached.
+If the project isn't OTel-instrumented, `_current_otel_trace_id()` returns `None`, the SDK auto-generates a fresh trace_id, and you still get a clean per-invocation waterfall, just without the backend span attached.
 
 ## Fail-Open
 
-The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, tracing callbacks are silently suppressed — the LangChain integration will never crash or block the user's application.
+The SDK is fail-open by default (`fail_open=True`). If axonpush is unreachable, tracing callbacks are silently suppressed. The LangChain integration will never crash or block the user's application.

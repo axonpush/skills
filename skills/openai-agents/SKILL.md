@@ -1,20 +1,20 @@
 ---
 name: openai-agents
-description: Wire AxonPush tracing into a Python project that uses the OpenAI Agents SDK (`Runner.run`). Async-only; uses `AsyncAxonPush`. Use when the user wants agent run, tool, and handoff events.
+description: Wire axonpush tracing into a Python project that uses the OpenAI Agents SDK (`Runner.run`). Async-only; uses `AsyncAxonPush`. Use when the user wants agent run, tool, and handoff events.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + OpenAI Agents SDK Integration
+# axonpush + OpenAI Agents SDK Integration
 
-Integrate AxonPush tracing into a project using the OpenAI Agents SDK.
+Integrate axonpush tracing into a project using the OpenAI Agents SDK.
 
 ## What gets added
 
@@ -45,7 +45,7 @@ axonpush_hooks = AxonPushRunHooks(
 
 ## Steps
 
-1. Install `axonpush[openai-agents]` from the latest GitHub commit -- e.g. `uv add "axonpush[openai-agents] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
+1. Install `axonpush[openai-agents]` with the project's package manager, e.g. `uv add "axonpush[openai-agents]"` (or the `pip install`/`poetry add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main file where Runner.run() is called
 4. Add the imports and AsyncAxonPush client (this SDK is async-only)
@@ -59,4 +59,4 @@ axonpush_hooks = AxonPushRunHooks(
 
 ## Fail-Open
 
-The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, tracing hooks are silently suppressed — the OpenAI Agents integration will never crash or block the user's application.
+The SDK is fail-open by default (`fail_open=True`). If axonpush is unreachable, tracing hooks are silently suppressed. The OpenAI Agents integration will never crash or block the user's application.

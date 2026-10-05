@@ -4,6 +4,34 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.9] – 2026-10-05
+
+### Changed
+
+- Realigned the plugin to agent operations observability: passive and
+  metadata-only, nothing in the request path.
+- `axonpush-integrate` now follows the MCP onboarding flow: connect the
+  axonpush MCP over OAuth, read `workspaces_describe` and `workspaces_catalog`,
+  build the spec in the shared draft with version-checked
+  `workspaces_applyDraftOps`, activate, then `workspaces_connect` for a
+  publish-only key and the app's env, and wire `observe`/`identify` plus OTLP,
+  framework or Sentry telemetry.
+- `axonpush-tailor-dashboard` edits the workspace spec (attributes, entities,
+  views, funnels, alerts) through the shared draft instead of authoring widget
+  dashboards.
+- `custom` and `ts-custom` send business observations and profile traits with
+  `observe` and `identify`.
+- `sentry` uses the `SENTRY_DSN` returned by `workspaces_connect`.
+- `axonpush-investigate` can follow a stuck entity through the workspace
+  timeline, incidents and health.
+- Framework skills read the `axonpush/sdks` monorepo READMEs and install the
+  published packages.
+- `api.sh` uses the current app, channel and event routes.
+
+### Removed
+
+- `gateway` sub-skill, with moderation and spend-policy guidance.
+
 ## [0.0.8] – 2026-09-26
 
 ### Added

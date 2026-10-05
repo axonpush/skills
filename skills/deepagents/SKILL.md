@@ -1,20 +1,20 @@
 ---
 name: deepagents
-description: Wire AxonPush tracing into a Python project using LangChain Deep Agents (`deepagents` package, `create_deep_agent`). Use when the user wants planning, subagent, filesystem, sandbox, and tool lifecycle events from a deep-agent workflow.
+description: Wire axonpush tracing into a Python project using LangChain Deep Agents (`deepagents` package, `create_deep_agent`). Use when the user wants planning, subagent, filesystem, sandbox, and tool lifecycle events from a deep-agent workflow.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + Deep Agents Integration
+# axonpush + Deep Agents Integration
 
-Integrate AxonPush tracing into a project using LangChain Deep Agents (`deepagents` package).
+Integrate axonpush tracing into a project using LangChain Deep Agents (`deepagents` package).
 
 ## What gets added
 
@@ -50,7 +50,7 @@ agent = create_deep_agent(
     system_prompt="You are a helpful assistant.",
 )
 
-# Run with AxonPush tracing
+# Run with axonpush tracing
 result = agent.invoke(
     {"messages": [{"role": "user", "content": "Research AI frameworks"}]},
     config={"callbacks": [axonpush_handler]},
@@ -59,12 +59,12 @@ result = agent.invoke(
 
 ## Steps
 
-1. Install `axonpush[deepagents]` from the latest GitHub commit -- e.g. `uv add "axonpush[deepagents] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
+1. Install `axonpush[deepagents]` with the project's package manager, e.g. `uv add "axonpush[deepagents]"` (or the `pip install`/`poetry add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the main file where `create_deep_agent()` or `agent.invoke()` is called
-4. Add the imports and client initialization (as module-level code)
+4. Add the imports and client initialisation (as module-level code)
 5. Add `config={"callbacks": [axonpush_handler]}` to `.invoke()` calls
 
 ## Fail-Open
 
-The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, tracing callbacks are silently suppressed — the Deep Agents integration will never crash or block the user's application.
+The SDK is fail-open by default (`fail_open=True`). If axonpush is unreachable, tracing callbacks are silently suppressed. The Deep Agents integration will never crash or block the user's application.

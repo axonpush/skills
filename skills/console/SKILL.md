@@ -1,18 +1,18 @@
 ---
 name: console
-description: Forward Node/TypeScript `console.*` calls (log/info/warn/error/debug) into AxonPush as structured events. Adds an `attachConsole()` patch that wraps the global console without breaking existing logs. Use when the project has no dedicated logger and relies on `console.*` (detected as the fallback when no other log library is in package.json).
+description: Forward Node/TypeScript `console.*` calls (log/info/warn/error/debug) into axonpush as structured events. Adds an `attachConsole()` patch that wraps the global console without breaking existing logs. Use when the project has no dedicated logger and relies on `console.*` (detected as the fallback when no other log library is in package.json).
 ---
 
-# AxonPush + console integration
+# axonpush + console integration
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "console" section.
+`https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`, "console" section.
 
 ## What gets added
 
 - `attachConsole()` from `@axonpush/sdk/integrations/console` patches `console.log/info/warn/error/debug`.
-- Original console output is preserved; AxonPush gets a copy as an event with `eventType: "app.log"`, `identifier: console`, `payload: { level, args }`.
+- Original console output is preserved; axonpush gets a copy as an event with `eventType: "app.log"`, `identifier: console`, `payload: { level, args }`.
 
 ## Static reference
 

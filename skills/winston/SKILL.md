@@ -1,13 +1,13 @@
 ---
 name: winston
-description: Forward `winston` log records into AxonPush as structured events. Adds an `AxonpushTransport` to the winston logger so existing `logger.info(...)` calls publish events. Use when the Node/TypeScript project uses winston (detected by `winston` in package.json).
+description: Forward `winston` log records into axonpush as structured events. Adds an `AxonpushTransport` to the winston logger so existing `logger.info(...)` calls publish events. Use when the Node/TypeScript project uses winston (detected by `winston` in package.json).
 ---
 
-# AxonPush + winston integration
+# axonpush + winston integration
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md` — "winston" section.
+`https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`, "winston" section.
 
 ## What gets added
 

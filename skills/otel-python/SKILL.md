@@ -11,7 +11,7 @@ axonpush speaks OTLP/HTTP natively, so a service that already emits OpenTelemetr
 
 Before applying, fetch the current SDK monorepo README to catch any recent API change:
 
-- `https://raw.githubusercontent.com/axonpush/sdks/HEAD/README.md` (source under `packages/python`)
+- `https://raw.githubusercontent.com/axonpush/sdks/master/README.md` (source under `packages/python`)
 
 The published package is **`axonpush`** on PyPI. Ignore the archived `axonpush/python-sdk` repo, it is stale and still resolves. If the fetch fails (offline, rate-limited), use the static reference below.
 
@@ -20,6 +20,8 @@ The published package is **`axonpush`** on PyPI. Ignore the archived `axonpush/p
 Point the standard OpenTelemetry `otlphttp` exporter at axonpush. Nothing about the application changes except one exporter block or a few environment variables.
 
 The endpoint is the bare host; the exporter appends `/v1/traces` and `/v1/logs` itself. Auth is an axonpush API key in the `X-API-Key` header.
+
+If `workspaces_connect` already wrote the app's env (see `axonpush-integrate`), `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_HEADERS` are set with a publish-only key bound to the workspace's app and environment, so the stock exporter needs no further configuration. Otherwise set them yourself:
 
 ```bash
 export OTEL_EXPORTER_OTLP_ENDPOINT="https://api.axonpush.xyz"
@@ -97,7 +99,7 @@ Path A is simpler and touches no application code; take it when the service is a
 
 ## Correlation
 
-OTel spans join gateway spans and Sentry events on one trace when they share a trace id. axonpush maps an OTel 32-hex trace id to and from its own UUID4 trace id deterministically, so if two services both run OTel and let the standard W3C propagators carry `traceparent`, their spans land in the same axonpush trace with no manual work. Across a non-OTel boundary, propagate `traceparent` yourself.
+OTel spans join framework spans and Sentry events on one trace when they share a trace id. axonpush maps an OTel 32-hex trace id to and from its own UUID4 trace id deterministically, so if two services both run OTel and let the standard W3C propagators carry `traceparent`, their spans land in the same axonpush trace with no manual work. Across a non-OTel boundary, propagate `traceparent` yourself.
 
 ## Fail-open
 

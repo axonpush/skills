@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# login.sh — browser-based AxonPush authentication.
+# login.sh: browser-based axonpush authentication.
 # Usage: bash login.sh [app_url]   (default: https://app.axonpush.xyz)
 #
 # Picks a free port on 127.0.0.1, opens ${app_url}/wizard-auth?port=$PORT in
@@ -148,6 +148,7 @@ else
 fi
 
 # shellcheck disable=SC2317  # invoked via `trap`
+# shellcheck disable=SC2329 # invoked via trap
 cleanup() {
   if [[ -n "$LISTENER_PID" ]] && kill -0 "$LISTENER_PID" 2>/dev/null; then
     kill "$LISTENER_PID" 2>/dev/null || true

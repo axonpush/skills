@@ -1,56 +1,59 @@
 ---
 name: custom
-description: Wire direct AxonPush event publishing into a Python project that does not use a supported framework. Use when no specific framework integration applies and the user wants to emit custom events with `client.events.publish()`.
+description: Send business observations and profile traits from a Python project to an axonpush workspace with `observe()` and `identify()`. Use for committed state transitions, joins, waits and outcomes that no framework integration captures, or when no supported framework applies.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest SDK README to capture recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md` ("Agent operations" section)
 
-Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
+If the fetch fails, use the reference code below.
 
-# AxonPush Custom Framework Integration
+# Python observations
 
-Integrate AxonPush event publishing directly for custom or unsupported frameworks.
+`observe()` sends a metadata-only observation to a workspace. The workspace spec decides what it means: each entity whose type appears in `refs` and has a rule matching the event stores its declared fields from `attributes`, then applies the rule's `set` literals. `identify()` attaches profile traits (names, plans) to an entity.
 
-## What gets added
+The event names, ref types and attribute keys must exist in the workspace spec. Undeclared attribute keys are dropped and listed in the report's `dropped`. Build or extend the spec first with `axonpush-integrate` or `axonpush-tailor-dashboard`.
 
-- `AxonPush` client for publishing custom events
-- Use `client.events.publish()` to send events from anywhere in your code
-
-## Reference Code
+## Reference code
 
 ```python
 import os
-from axonpush import AxonPush, EventType
+from axonpush import AxonPush
 
-axonpush_client = AxonPush(
-    api_key=os.environ["AXONPUSH_API_KEY"],
-    tenant_id=os.environ["AXONPUSH_TENANT_ID"],
-    base_url=os.environ.get("AXONPUSH_BASE_URL", "https://api.axonpush.xyz"),
+axonpush = AxonPush()  # reads AXONPUSH_API_KEY, AXONPUSH_BASE_URL and AXONPUSH_ENVIRONMENT
+WORKSPACE = os.environ["AXONPUSH_WORKSPACE_ID"]
+
+axonpush.observe(
+    WORKSPACE,
+    "ticket.solved",
+    refs={"ticket": ticket.id, "agent": agent.id},
+    attributes={"status": "solved", "handle_ms": handle_ms},
+    source_event_id=f"ticket:{ticket.id}:rev:{ticket.revision}",
 )
 
-# Publish events from your code:
-# axonpush_client.events.publish(
-#     identifier="my.event",
-#     payload={"key": "value"},
-#     channel_id=os.environ["AXONPUSH_CHANNEL_ID"],
-#     agent_id="my-agent",
-#     event_type=EventType.CUSTOM,
-# )
+axonpush.identify(WORKSPACE, "customer", customer.id, {"display_name": customer.name, "plan": None})
 ```
+
+`observe` also takes `occurred_at`, `trace_id`, `span_id`, `environment`, `snapshot` and `source` (`{"ref": ..., "revision": ...}`); `observe_many` sends a list in batches of 100. `identify` merges traits restricted to the entity's `profile` keys, and `None` deletes a trait. `group` is the same call, for company-like entities. `AsyncAxonPush` has the same methods.
 
 ## Steps
 
-1. Install `axonpush` from the latest GitHub commit -- e.g. `uv add "axonpush @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
-2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
-3. Find the main entry point of the project
-4. Add imports and create the client as a module-level singleton
-5. Add example publish calls at key points (e.g., start, end, error handling)
+1. Install `axonpush` with the project's package manager (`uv add axonpush`, `pip install axonpush` or `poetry add axonpush`). If the installed version has no `AxonPush.observe`, install from source: `uv add "axonpush @ git+https://github.com/axonpush/sdks.git@dev#subdirectory=packages/python"`.
+2. Make sure `AXONPUSH_API_KEY`, `AXONPUSH_BASE_URL`, `AXONPUSH_WORKSPACE_ID` and `AXONPUSH_ENVIRONMENT` are in the app's git-ignored env file. `workspaces_connect` returns them; do not ask the user to copy keys.
+3. Create the client once at module level.
+4. Call `observe` where each declared transition is committed, after the transaction commits, and `identify` where profile data changes.
+5. Send one test observation and confirm it in `workspaces_catalog` or `activity_timeline`.
 
-## Fail-Open
+## Rules
 
-The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, publish calls return `None` instead of raising — the SDK will never crash or block the user's application.
+- Metadata only: opaque ids, bounded enum values, numbers, durations and timestamps. Never send prompts, model output, message bodies, tool arguments or results, documents, credentials, full URLs or raw exception text. Personal values belong only in attributes declared `personal: true`.
+- Reuse a stable `source_event_id` when the same fact may be retried, and pass the original `occurred_at` when sending late, so duplicates and late deliveries do not distort state.
+- Use `snapshot=True` when seeding current state from existing records. Snapshots update state without counting as activity or funnel progress.
+- Never call axonpush inside a business transaction, and never let a failed export change the response. For must-not-lose transitions, send from an outbox or background worker with retries.
+
+## Fail-open
+
+The SDK is fail-open by default (`fail_open=True`). If axonpush is unreachable, `observe` and `identify` return `None` instead of raising, so the application keeps working.

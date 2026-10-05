@@ -1,20 +1,20 @@
 ---
 name: crewai
-description: Wire AxonPush tracing into a Python CrewAI project (`crewai` package). Use when the user wants to observe crew lifecycle, agent steps, tool calls, and task completion across a multi-agent CrewAI workflow.
+description: Wire axonpush tracing into a Python CrewAI project (`crewai` package). Use when the user wants to observe crew lifecycle, agent steps, tool calls, and task completion across a multi-agent CrewAI workflow.
 ---
 
 ## Reference (live)
 
-Before applying this integration, fetch the latest README from the SDK repo to capture any recent API changes:
+Before applying this integration, fetch the latest README from the `axonpush/sdks` monorepo to capture any recent API changes:
 
-- Python skills: `https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md`
-- TypeScript skills: `https://raw.githubusercontent.com/axonpush/ts-sdk/master/README.md`
+- Python skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`
+- TypeScript skills: `https://raw.githubusercontent.com/axonpush/sdks/master/packages/typescript/README.md`
 
 Use the section relevant to this framework. If the fetch fails (offline, rate-limited), use the static reference code below as a fallback.
 
-# AxonPush + CrewAI Integration
+# axonpush + CrewAI Integration
 
-Integrate AxonPush tracing into a CrewAI project.
+Integrate axonpush tracing into a CrewAI project.
 
 ## What gets added
 
@@ -54,7 +54,7 @@ axonpush_callbacks = AxonPushCrewCallbacks(
 
 ## Steps
 
-1. Install `axonpush[crewai]` from the latest GitHub commit -- e.g. `uv add "axonpush[crewai] @ git+https://github.com/axonpush/python-sdk.git"` (or the `pip install`/`poetry add` equivalent)
+1. Install `axonpush[crewai]` with the project's package manager, e.g. `uv add "axonpush[crewai]"` (or the `pip install`/`poetry add` equivalent)
 2. Add AXONPUSH_API_KEY, AXONPUSH_TENANT_ID, AXONPUSH_BASE_URL, AXONPUSH_CHANNEL_ID to .env
 3. Find the file where `Crew(...)` is instantiated
 4. Add imports and create the callbacks object
@@ -64,4 +64,4 @@ axonpush_callbacks = AxonPushCrewCallbacks(
 
 ## Fail-Open
 
-The SDK is fail-open by default (`fail_open=True`). If AxonPush is unreachable, tracing callbacks are silently suppressed — the CrewAI integration will never crash or block the user's application.
+The SDK is fail-open by default (`fail_open=True`). If axonpush is unreachable, tracing callbacks are silently suppressed. The CrewAI integration will never crash or block the user's application.

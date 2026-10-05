@@ -1,13 +1,13 @@
 ---
 name: loguru
-description: Forward `loguru` log records into AxonPush as structured events. Adds an `axonpush_sink` to the loguru logger so existing `logger.info(...)` calls publish events. Use when the Python project uses loguru (detected by `loguru` in pyproject.toml or requirements.txt).
+description: Forward `loguru` log records into axonpush as structured events. Adds an `axonpush_sink` to the loguru logger so existing `logger.info(...)` calls publish events. Use when the Python project uses loguru (detected by `loguru` in pyproject.toml or requirements.txt).
 ---
 
-# AxonPush + loguru integration
+# axonpush + loguru integration
 
 ## Reference (live)
 
-`https://raw.githubusercontent.com/axonpush/python-sdk/master/README.md` — "loguru" section.
+`https://raw.githubusercontent.com/axonpush/sdks/master/packages/python/README.md`, "loguru" section.
 
 ## What gets added
 
