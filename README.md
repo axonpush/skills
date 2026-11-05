@@ -50,6 +50,7 @@ directly, for example `/axonpush-langchain`.
 | `axonpush-integrate` | End-to-end setup: MCP, workspace spec, activation, `workspaces_connect`, instrumentation and verification. |
 | `axonpush-tailor-dashboard` | Revise the workspace spec through the shared draft and activate a new revision. |
 | `axonpush-investigate` | Investigate a failed or slow run, or a stuck entity, from issue, trace and workspace evidence. |
+| `axonpush-compliance` | Add declared tasks, reported decisions, policy outcomes and notice delivery using a compatible SDK. |
 | `custom`, `ts-custom` | `observe` and `identify` calls for business state and profiles. |
 | `otel-python`, `otel-ts`, `dotnet-otel` | Export spans from an existing OpenTelemetry setup. |
 | `langchain`, `deepagents`, `crewai`, `anthropic`, `openai-agents`, `ts-*`, `dotnet-semantic-kernel` | Model and tool span metadata from agent frameworks, without changing routing. |
