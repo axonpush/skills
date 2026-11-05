@@ -50,3 +50,37 @@ does not establish that the goal/reason was retained. Preserve the client's
 fail-open setting and the application's original exceptions. Never claim that
 instrumentation establishes certification, legal applicability or complete
 compliance.
+
+## Read policy and verify retained evidence
+
+Discover `/capabilities/operations` before using the management surface. An ingest
+key may read only the policy of the agent to which it is explicitly bound. Use
+`GET /audit/agents/{id}/policy` (or the subject-aware POST policy check advertised
+by the server) with that same binding. Treat transport/auth failures explicitly;
+never silently interpret an unavailable policy as an allow decision. The SDK
+records enforcement outcomes, while the application performs the actual block.
+Suspension revokes the bound credentials. Resuming requires newly issued keys;
+do not resurrect an independently revoked credential.
+
+For audit discovery, distinguish the pre-existing admin-chain verification
+operation `audit.verify` from archive verification `audit.evidence.verify`.
+Obligations and affected-person requests use the advertised `auditProduct.*`
+operations. These require audit/request scopes; never add those scopes to a
+passive publisher merely to simplify instrumentation. Watch or review-required
+catalogue entries do not establish an effective legal duty or a satisfied control.
+
+Archived content can require restoration before it is readable. A missing key
+after subject erasure is an intentional permanent result, while a cold object
+needs the explicit restore workflow. Do not recreate erased subjects or copy
+private content into reasons, metadata, evidence packs or logs to bypass erasure.
+When fulfilling a verified erasure case, distinguish immediate access revocation
+from background physical cleanup; keep the case pending until reconciliation
+reports ready. Anonymous public request forms are not identity verification.
+
+Downloaded bundles may be checked offline with `axonpush verify-evidence` and
+packs with `axonpush verify-pack`. Supply a seal checkpoint or issuer public key
+obtained through an independent trusted channel. The matching SDK repository
+publishes `spec/evidence/v1` with event and manifest schemas and format details.
+Framework lifecycle capture is opt-in with an actual declared goal; consult the
+installed integration's API. Never substitute an agent handoff for a completed
+run or infer a person's goal from a framework class name.
