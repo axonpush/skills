@@ -55,19 +55,63 @@ AUTH_URL="${APP_URL}/wizard-auth?port=${PORT}"
 RESULT_FILE=$(mktemp)
 trap 'rm -f "$RESULT_FILE"' EXIT
 
+# ---- callback pages ------------------------------------------------------------
+# page <state> <title> <message>: a small self-contained page (no external
+# assets) in the dashboard's monochrome style, light or dark per the OS.
+# state is ok | wait | error.
+page() {
+  local state=$1 title=$2 message=$3 mark
+  case "$state" in
+    ok)    mark='<path d="M5 12.5l4.5 4.5L19 7.5"/>' ;;
+    error) mark='<path d="M12 7v6"/><path d="M12 16.5v.5"/>' ;;
+    *)     mark='<circle cx="12" cy="12" r="7" class="spin"/>' ;;
+  esac
+  cat <<HTML
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} · axonpush</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--fg:#1c1c1c;--muted:#6b6b6b;--border:rgba(0,0,0,.09);--ok:#16a34a;--err:#dc2626;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0d0d0d;--card:#161616;--fg:#ededed;--muted:#a3a3a3;--border:rgba(255,255,255,.09);--ok:#4ade80;--err:#f87171}}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;display:grid;place-items:center;padding:16px;background:var(--bg);color:var(--fg);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:100%;max-width:400px;padding:32px;border:1px solid var(--border);border-radius:24px;background:var(--card);text-align:center}
+.word{margin:0 0 28px;font:600 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;text-transform:lowercase;color:var(--muted)}
+.mark{display:inline-grid;place-items:center;width:48px;height:48px;margin-bottom:16px;border:1px solid var(--border);border-radius:14px}
+.mark svg{width:24px;height:24px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ok .mark svg{stroke:var(--ok)}.error .mark svg{stroke:var(--err)}.wait .mark svg{stroke:var(--muted)}
+.spin{stroke-dasharray:30 14;transform-origin:center;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+h1{margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:-.01em}
+p{margin:0;color:var(--muted)}
+</style></head><body class="${state}"><main>
+<p class="word">axonpush</p>
+<div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24">${mark}</svg></div>
+<h1>${title}</h1>
+<p>${message}</p>
+</main></body></html>
+HTML
+}
+
+export AXONPUSH_OK_HTML AXONPUSH_WAIT_HTML AXONPUSH_ERR_HTML
+AXONPUSH_OK_HTML=$(page ok "You're signed in" "Your terminal has what it needs. You can close this tab and return to it.")
+AXONPUSH_WAIT_HTML=$(page wait "Waiting for sign-in" "Finish signing in to axonpush in the other tab. This page isn't needed.")
+AXONPUSH_ERR_HTML=$(page error "That didn't finish" "No credentials arrived. Run the login again from your terminal.")
+
 # ---- start listener (background) -------------------------------------------
 LISTENER_PID=""
 start_python_listener() {
   python3 - "$PORT" "$RESULT_FILE" <<'PY' &
-import json, socket, sys, urllib.parse
+import json, os, socket, sys, urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 port = int(sys.argv[1])
 out_path = sys.argv[2]
 
-OK_HTML = b"<html><body><h2>Authenticated! You can close this tab.</h2></body></html>"
-WAIT_HTML = b"<html><body><h2>Waiting for authentication...</h2></body></html>"
-ERR_HTML = b"<html><body><h2>Missing credentials. Please try again.</h2></body></html>"
+OK_HTML = os.environ["AXONPUSH_OK_HTML"].encode()
+WAIT_HTML = os.environ["AXONPUSH_WAIT_HTML"].encode()
+ERR_HTML = os.environ["AXONPUSH_ERR_HTML"].encode()
 
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a, **kw):
@@ -80,7 +124,7 @@ class H(BaseHTTPRequestHandler):
             tenant_id = (q.get("tenant_id") or [""])[0]
             if api_key and tenant_id:
                 self.send_response(200)
-                self.send_header("Content-Type", "text/html")
+                self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
                 self.wfile.write(OK_HTML)
                 with open(out_path, "w") as f:
@@ -90,12 +134,12 @@ class H(BaseHTTPRequestHandler):
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
             self.send_response(400)
-            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(ERR_HTML)
             return
         self.send_response(200)
-        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
         self.wfile.write(WAIT_HTML)
 
@@ -110,7 +154,7 @@ start_nc_listener() {
   # response, and stop once we capture credentials.
   (
     while :; do
-      req=$( { echo -e 'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n<html><body><h2>Waiting...</h2></body></html>'; } \
+      req=$( { printf 'HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nConnection: close\r\n\r\n%s' "$AXONPUSH_WAIT_HTML"; } \
         | nc -l -p "$PORT" -q 1 2>/dev/null | head -n 1 || true)
       [[ -z "$req" ]] && continue
       # req looks like: GET /callback?api_key=X&tenant_id=Y HTTP/1.1
@@ -130,7 +174,7 @@ start_nc_listener() {
           if [[ -n "$api_key" && -n "$tenant_id" ]]; then
             printf '{"api_key":"%s","tenant_id":"%s"}' "$api_key" "$tenant_id" > "$RESULT_FILE"
             # Send a final 200 to a fresh connection then exit.
-            { echo -e 'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n<html><body><h2>Authenticated! You can close this tab.</h2></body></html>'; } \
+            { printf 'HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nConnection: close\r\n\r\n%s' "$AXONPUSH_OK_HTML"; } \
               | nc -l -p "$PORT" -q 1 >/dev/null 2>&1 || true
             exit 0
           fi

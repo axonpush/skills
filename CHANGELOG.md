@@ -229,3 +229,10 @@ adheres to [SemVer](https://semver.org/).
   installer (`npx skills add axonpush/skills`), which works in 50+ AI
   coding agents (Cursor, Codex, OpenCode, Cline, GitHub Copilot, Windsurf,
   Gemini, …).
+
+## Unreleased audit platform
+
+- Add passive task/decision/denial/notice instrumentation guidance across the
+  licensed portable and hosted endpoints.
+- Explain current capability discovery, bound policy reads, archive/pack offline
+  verification, and erasure reconciliation without implying certification.
