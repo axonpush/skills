@@ -6,7 +6,7 @@
     "url": "https://axonpush.xyz"
   },
   "metadata": {
-    "description": "Passive, metadata-only observability for agent and business operations. Your coding agent connects the axonpush MCP, builds a workspace spec for your app (data dictionary, entities, views, funnels, alerts), mints a publish-only key with workspaces_connect, and wires observe/identify calls plus OTLP, framework or Sentry telemetry."
+    "description": "Workflow verification and business observability, with guided setup through your coding agent."
   },
   "plugins": [
     {
@@ -15,11 +15,13 @@
         "source": "github",
         "repo": "axonpush/skills"
       },
-      "version": "0.0.9",
-      "description": "Passive, metadata-only observability for agent and business operations. Your coding agent connects the axonpush MCP, builds a workspace spec for your app (data dictionary, entities, views, funnels, alerts), mints a publish-only key with workspaces_connect, and wires observe/identify calls plus OTLP, framework or Sentry telemetry.",
+      "version": "0.0.10",
+      "description": "Define one business commitment, generate deterministic integration hooks and verify outcomes against supplied evidence. Includes guided MCP setup and optional business observability.",
       "category": "observability",
       "keywords": [
         "axonpush",
+        "workflow-verification",
+        "booking-reconciliation",
         "observability",
         "tracing",
         "analytics",
