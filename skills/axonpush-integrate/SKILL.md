@@ -10,6 +10,19 @@ with accepted booking requests and actual appointment records when that fits
 the application. Keep the user's workflow and domain; booking is an example.
 AxonPush observes execution. The application performs business actions.
 
+When the user also wants agents to propose changes, inspect the action section
+of the published contract. Ask which changes need human review and which
+external record confirms completion. For a development example, run
+`axonpush workflow init --template booking-reschedule --out booking-demo`.
+Generate the typed handlers and run the package's routine, review, mismatch
+and unavailable scenarios. Use a customer-side worker with a bound
+`workflows:execute` key. Keep proposal credentials separate. Discover eligible
+actions with `workflows_actions` and submit an authorized proposal with
+`workflows_proposeAction` using a stable request ID. Direct a human reviewer
+to Needs attention for a gated action. Inspect the execution receipt and
+independent lookup on that same case. See the workflow actions quickstart at
+https://docs.axonpush.xyz/workflows-actions.
+
 For a request specifically about tracing, profiles, business dashboards or an
 existing Nova workspace, use [business observability](references/observability.md).
 Its draft activation is separate from workflow-definition activation. Preserve
