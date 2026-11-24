@@ -1,17 +1,21 @@
 # axonpush skills
 
-Passive, metadata-only observability for agent and business operations, set up by your coding agent.
+Workflow verification and business observability, set up with your coding agent.
 
-axonpush never sits in your request path. Your app sends observations (opaque ids, states, outcomes, timings) and its existing OpenTelemetry, framework or Sentry telemetry; axonpush projects them into a workspace built for your business. Each installation declares its own spec: a data dictionary of attributes, the entities being tracked, the events that update them, and the views, funnels and alerts the dashboard shows. Nothing is hardcoded to one domain; templates such as Nova (a hiring room) and a support desk are starting points.
+Define one customer commitment, generate typed hooks and check its outcome against evidence from your own systems. Start with an AI booking request and its actual appointment record when that fits your application. Repository-owned YAML, Zod and Effect contracts use the same deterministic Go verifier locally and on the server. Your application keeps provider credentials and performs business actions.
+
+Existing business profiles, activity views, Nova Hiring Room integrations, OpenTelemetry and error investigation remain available. The integration skill includes a separate business-observability path.
 
 The flow these skills follow:
 
 1. Connect the axonpush MCP (OAuth, no keys to copy).
-2. `workspaces_describe` and `workspaces_catalog` show the spec format and what the app already sends.
-3. The agent builds the spec in a shared draft with typed, version-checked ops (`workspaces_applyDraftOps`), which the user can watch and edit in the dashboard.
-4. The user reviews and activates the draft.
-5. `workspaces_connect` mints a publish-only key and returns the env the app needs.
-6. The agent adds `observe` and `identify` calls and any OTLP, framework or Sentry wiring, then verifies a test event.
+2. Resolve a workspace/development environment and call `workflows_describe` for questions, exact tool names and a synthetic example.
+3. Define the promise, authoritative record, stable case ID and timing. Generate hooks and test satisfied, missing-record and unavailable-source fixtures.
+4. Publish the reviewed definition and explicitly activate its version for the selected environment.
+5. `workspaces_connect` returns a claim link for the signed-in user to save secrets locally. Bind the source to that connection's publisher ID.
+6. Implement reliable post-commit fact publication and reconciliation, then inspect an evaluated case. A receipt or registered source is not verification.
+
+These tools require a server/SDK release that includes workflow verification; check the connected server and installed package capabilities first. If MCP authentication fails, report it once and use local fixtures while the connection is resolved.
 
 ## Install
 
@@ -47,7 +51,7 @@ directly, for example `/axonpush-langchain`.
 
 | Skill | Purpose |
 | --- | --- |
-| `axonpush-integrate` | End-to-end setup: MCP, workspace spec, activation, `workspaces_connect`, instrumentation and verification. |
+| `axonpush-integrate` | Workflow-first setup: guided questions, deterministic hooks/tests, definition activation, source binding and evaluated cases. Optional business-observability setup is preserved. |
 | `axonpush-tailor-dashboard` | Revise the workspace spec through the shared draft and activate a new revision. |
 | `axonpush-investigate` | Investigate a failed or slow run, or a stuck entity, from issue, trace and workspace evidence. |
 | `axonpush-compliance` | Add declared tasks, reported decisions, policy outcomes and notice delivery using a compatible SDK. |

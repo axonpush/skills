@@ -4,6 +4,18 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [SemVer](https://semver.org/).
 
+## [0.0.10] – 2026-11-23
+
+### Changed
+
+- Made integration workflow-first: discovery questions, deterministic local tests,
+  explicit definition activation, evidence-source binding and evaluated cases.
+- Preserved business-observability setup as a linked reference, including Nova.
+- Corrected delegated credentials to use user-opened claim links and intentional
+  key rotation; stopped automatic authorization retry loops in setup guidance.
+- Updated marketplace descriptions. These changes are prepared locally and do
+  not imply a marketplace listing, hosted server deployment or SDK publication.
+
 ## [0.0.9] – 2026-10-05
 
 ### Changed

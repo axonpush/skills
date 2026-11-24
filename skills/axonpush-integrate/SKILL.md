@@ -1,117 +1,121 @@
 ---
 name: axonpush-integrate
-description: Set up axonpush in the current project. Connects the axonpush MCP, reads what the app already sends, builds the workspace spec (data dictionary, entities, views, funnels, alerts) through the shared draft, activates it, then calls workspaces_connect to mint a publish-only key and write the app's env, and adds observe/identify calls plus OTLP, framework or Sentry telemetry. Use when the user asks to "set up axonpush", "add tracing", "integrate axonpush" or "instrument this app".
+description: Set up AxonPush workflow verification in an application. Define one business commitment, generate hooks, test evidence with the deterministic verifier, and configure a development deployment over MCP. Also supports optional business observability and existing Nova integrations.
 ---
 
-# Integrate axonpush
+# Integrate AxonPush
 
-axonpush is passive, metadata-only observability for agent and business operations. It records what happened (opaque ids, bounded states, outcomes, timings) and shows it in a workspace built for this application. It never sits in the request path: do not reroute model calls, add approval or blocking steps, or change auth, permissions, responses or side effects. The source application stays the authority for identity and decisions.
+Help the user verify one business commitment against supplied evidence. Start
+with accepted booking requests and actual appointment records when that fits
+the application. Keep the user's workflow and domain; booking is an example.
+AxonPush observes execution. The application performs business actions.
 
-Nothing is domain-hardcoded. Each installation declares its own spec. Templates (for example Nova, a hiring room, and a support desk) are only starting points.
+When the user also wants agents to propose changes, inspect the action section
+of the published contract. Ask which changes need human review and which
+external record confirms completion. For a development example, run
+`axonpush workflow init --template booking-reschedule --out booking-demo`.
+Generate the typed handlers and run the package's routine, review, mismatch
+and unavailable scenarios. Use a customer-side worker with a bound
+`workflows:execute` key. Keep proposal credentials separate. Discover eligible
+actions with `workflows_actions` and submit an authorized proposal with
+`workflows_proposeAction` using a stable request ID. Direct a human reviewer
+to Needs attention for a gated action. Inspect the execution receipt and
+independent lookup on that same case. See the workflow actions quickstart at
+https://docs.axonpush.xyz/workflows-actions.
 
-## 1. Connect the axonpush MCP
+For a request specifically about tracing, profiles, business dashboards or an
+existing Nova workspace, use [business observability](references/observability.md).
+Its draft activation is separate from workflow-definition activation. Preserve
+existing telemetry and workspace specifications during workflow setup.
 
-Every step below runs through the axonpush MCP. If its tools (`workspaces_describe` and friends) are not available, ask the user to connect it and stop until they have:
+## Discover the application and connection
 
-```bash
-claude mcp add --transport http axonpush https://api.axonpush.xyz/mcp
-```
+Inspect the repository's language, dependencies, workflow code, committed state
+transitions and reliable publication path. Reuse existing instrumentation and
+connections. Do not change model routing or business behavior for this setup.
 
-The first tool call opens an OAuth consent page in the browser. Other clients (Cursor, Codex) are listed on the dashboard's Connect page. For self-hosted or local servers, use that server's `/mcp` URL. MCP tool names are the HTTP operation ids with dots replaced by underscores (`workspaces.describe` becomes `workspaces_describe`).
+If MCP is available, discover its permitted tools. Resolve the intended workspace
+with `workspaces_list` and an explicit development environment with
+`environments_list`. Adopt the pending workspace from dashboard onboarding when
+it is the intended application. Use the actual schemas to create an app/workspace
+only when needed; never guess IDs or overwrite existing specifications.
 
-Do not ask the user to copy API keys, app ids or channel ids from the dashboard. `workspaces_connect` (step 5) provides them.
+Call `workflows_describe` with `workspaceId` and `environment`. Follow its guide,
+schemas and compiler version over stale examples in this skill. It is read-only:
+it returns questions, exact tool names and a synthetic contract/fixture, not a
+configured integration. Read existing definitions and activations first.
 
-## 2. Pick the workspace
+When MCP is absent, offer a deliberate connection to the user's server `/mcp`
+endpoint or continue with local contract authoring/testing using the docs. A
+failed authorization should be reported once; do not loop browser sign-in,
+invent successful calls or claim the hosted deployment is configured.
 
-Call `workspaces_list`. The dashboard's onboarding usually creates a pending workspace for the user's application; adopt it. Otherwise call `apps_list` (or `apps_create`) and then `workspaces_create` with `{"appId": "...", "spec": {"name": "..."}}`. A blank spec leaves the workspace pending, with the spec held in the shared draft. `templates_list` returns public and organisation-private templates; offer one only when it genuinely fits the domain.
+## Ask useful questions
 
-## 3. Read the evidence and the code
+Infer answers from code, then ask at most two unresolved questions at a time:
 
-Call `workspaces_describe` first. It returns a plain-language summary of the workspace, the setup steps, the full spec and observation format, the attribute roles and the draft op catalogue with examples. Follow it over anything in this file if they differ. `workspaces_schema` returns the JSON Schema.
+- What customer commitment and client deployment should we verify first?
+- Which authoritative record proves completion, and can customer code read it?
+- Which stable request/case ID joins attempts, retries and records?
+- What deadline, grace and reconciliation coverage make missing evidence meaningful?
+- Which existing language and YAML/Zod/Effect authoring approach fits this codebase?
 
-Call `workspaces_catalog` to see what the app already sends: event names with counts, refs, attribute keys seen (declared and undeclared) and which entities consume each event. An empty catalogue is normal for a new app.
+Clarify cancellations/rescheduling and distinct duplicate records. A transcript
+or successful function call alone does not establish a persisted provider record.
+Prefer opaque IDs and bounded fields; avoid raw conversations and unnecessary
+personal information. Keep provider credentials in the customer's application.
 
-Then read the codebase. `helpers/detect.sh <dir>` summarises language, package manager, AI frameworks, log libraries, provider clients and Sentry, but it is not a coverage proof. Look for:
+## Implement and test locally
 
-- the things worth tracking (agents, conversations, tickets, orders, candidates, jobs) and their stable ids
-- committed state transitions and where they happen (handlers, services, workers)
-- join and sign-in paths, tool calls, background jobs and waits on a human or another party
-- who acts on each side of the business, and which client or agent framework they use
-- any attribute that identifies a person (names, emails, avatars)
+Save the contract in the repository. Use the installed, version-pinned CLI to
+validate, generate typed hooks and run fixed-clock fixtures. Consult
+https://docs.axonpush.xyz/workflows-quickstart and the matching SDK/provider docs
+before choosing commands or imports; source-checkout capabilities may not exist
+in a published package yet. YAML, Zod and Effect must use the shared Go verifier.
+Do not replace it with an LLM judgement or execute arbitrary schema callbacks.
 
-Actions an external agent takes privately on its own machine are not observable; only what passes through this app is.
+Implement customer-side evidence checks and reliable fact delivery after the
+source transaction commits. Distinguish absent records, mismatches and lookup
+failures. Preserve user-owned adapter implementations during regeneration.
+Test satisfied, missing-record and unavailable-source fixtures. Use
+`workflows_compile` and `workflows_simulate` with an explicit input clock to
+compare server semantics without persisting cases.
 
-## 4. Build the spec in the shared draft
+## Publish, connect and verify
 
-The draft is shared with the dashboard editor, so the user can watch it fill in and edit it too. Never rewrite the spec blindly.
+Explain the implementation diff and evidence limitations. Use `workflows_diff`,
+`workflows_publish` and then `workflows_activate` for the reviewed development
+deployment. Confirm it with `workflows_activation`. Publishing alone does not
+activate a definition; existing cases remain pinned. Production changes require
+the user's instruction for that deployment.
 
-1. `workspaces_draft` reads the draft (created from the active spec on first read) and its `version`.
-2. `workspaces_applyDraftOps` sends `{"version": N, "ops": [...]}`. Ops apply in order, all or nothing, and the response carries the new version and validation issues. On 409 the error body holds the current draft: re-read it and reapply. `workspaces_replaceDraft` replaces the whole spec with the same version check.
-3. `workspaces_draftChanges` lists, in plain language, what the draft changes against the active spec.
+`workspaces_connect` resolves publish configuration for an explicit environment
+and purpose. Delegated agents receive `claim`, a one-time link the signed-in user
+opens to save secrets in the application's git-ignored environment file. They
+do not receive raw secrets. Do not bypass the claim link, print credentials or
+write placeholder secret values over a working file. Reuse existing keys;
+rotate only when revocation/replacement is intended by the user.
 
-The spec has these parts (`workspaces_describe` has the full reference):
+Register each source with `workflows_registerSource`, using the actual source
+ID and `publisher: "key:<publishKey.id>"` from that same connection. Confirm
+configuration via `workflows_sources`. Registration does not establish coverage.
 
-- `attributes`: the data dictionary. Each has a `key`, `type` (`text`, `number`, `duration` in ms, `time`, `enum`, `ref`, `bool`), optional `role`, `personal`, `values`, `scope`, and for outcomes `failure`, `expected` and `pending`. A `ref` can name the `entity` it points at. Undeclared keys are dropped at ingest and counted.
-- `entities`: each has a `type`, `fields` (attribute keys it stores), `profile` (keys `identify` may set), `terminal` states and `events` rules. A rule has a `match` (exact name or prefix ending in `*`), literal `set` values, and optionally `only`, `passive`, `erase` and a timeline `label`.
-- `views`: `kpi`, `timeseries`, `breakdown`, `funnel`, `latency`, `directory`, `health`, `rate`, `interval` and `graph`.
-- `funnels` over an entity's states, and `alerts` that fire when entities stay in a state or match a filter for too long.
+Publish a controlled development case through the workflow SDK/HTTP API with the
+bound application key. An OAuth MCP caller publishes as `user:<user ID>` and
+cannot impersonate that key; `workflows_facts` requires a source bound to its
+actual caller. Use stable fact IDs
+and explicit source reconciliation checkpoints. A heartbeat alone is insufficient.
+Wait for asynchronous processing and inspect `workflows_case`: require a
+nonprocessing case with at least one evaluated obligation and an explanation.
+A storage receipt, connection or generated hook does not prove verification.
 
-Use roles (`state`, `outcome`, `client`, `actor_side`, `duration`, `expected_duration`, `next_actor`, `wait_reason`, `display_name` and the rest) so the generic views, funnels and alerts can read the data. Mark anything that identifies a person `personal: true` and explain each personal attribute to the user before activation; personal values are masked unless the reader is an owner or admin or holds `profiles:read`. Mark the attribute that separates customers or tenants (for example a company ref) `scope: true` if people outside the organisation will need restricted access later; access grants (`workspaces_createAccessGrant`) then limit a member or API key to records carrying granted values.
+Link the case to the dashboard and related traces/business activity. Explain
+expected result, observed evidence, timing and the next investigative step.
+Acknowledgement is not satisfaction; waiver/cancellation remain separate, and
+late evidence must not erase a recorded breach. Do not retry bookings or execute
+other business actions as part of verification setup.
 
-Keep every value metadata: opaque ids, bounded enums, numbers and timestamps. Never send prompts, model output, hidden reasoning, tool arguments or results, message bodies, documents, credentials, contact details in non-personal attributes, full URLs or raw exception text. The server rejects email addresses in non-personal text and scans every value for credentials, but the allowlist belongs in the source.
-
-## 5. Activate and connect
-
-Ask the user to review the draft and activate it in the dashboard, or call `workspaces_activateDraft` if they approve in the chat. It saves an immutable revision and rebuilds projections in the background; it returns 422 with the issues if validation fails. Poll `workspaces_get` until `activeRevision` matches.
-
-Then call `workspaces_connect` (optionally with `environment`, and `purpose` such as `web` or `worker` to keep separate keys per process). It mints a key scoped only to `events:publish`, bound to this workspace's application and one environment, and returns `env` (`AXONPUSH_API_KEY`, `AXONPUSH_BASE_URL`, `AXONPUSH_WORKSPACE_ID`, `AXONPUSH_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS` and `SENTRY_DSN` when available), plus OTLP settings and SDK snippets. The secret appears only in the response that mints it. Calling again returns the existing key's metadata without the secret; `rotate: true` revokes it and mints a new one.
-
-Write `env` straight into the app's git-ignored env file (`.env.local` or the project's secret convention). `helpers/env.sh KEY=value ...` merges keys idempotently into `.env.local` or `.env`; check the file is ignored. Never commit, print or paste the key.
-
-## 6. Instrument the app
-
-Business state goes through `observe` and profiles through `identify`, using the SDK and the env written above:
-
-```python
-import os
-from axonpush import AxonPush
-
-axonpush = AxonPush()  # reads AXONPUSH_API_KEY, AXONPUSH_BASE_URL and AXONPUSH_ENVIRONMENT
-WORKSPACE = os.environ["AXONPUSH_WORKSPACE_ID"]
-
-axonpush.observe(WORKSPACE, "ticket.solved", refs={"ticket": ticket.id}, attributes={"status": "solved"})
-axonpush.identify(WORKSPACE, "customer", customer.id, {"display_name": customer.name})
-```
-
-```ts
-import { AxonPush } from "@axonpush/sdk";
-
-const axonpush = new AxonPush();
-const workspace = process.env.AXONPUSH_WORKSPACE_ID!;
-
-await axonpush.observe(workspace, { event: "ticket.solved", refs: { ticket: ticket.id }, attributes: { status: "solved" } });
-await axonpush.identify(workspace, { entity: "customer", id: customer.id, traits: { display_name: customer.name } });
-```
-
-`observe` fills `schema_version`, a UUID `source_event_id` and `occurred_at` when absent; pass a stable `source_event_id` when the same transition can be retried, and the original `occurred_at` when sending late. Use `snapshot=True` when seeding current state, so it updates state without counting as activity. `identify` merges traits restricted to the entity's `profile`; `null` deletes a trait (`group` is the same call, for company-like entities). The `custom` and `ts-custom` skills cover this in detail. If the installed SDK has no `observe`, follow the `custom` skill's install note or post to `POST /workspaces/{id}/observations`.
-
-Emit observations after the source transaction commits, never inside it, and never let a failed export change the request. The SDK is fail-open. For high-volume or must-not-lose transitions, send from an outbox or background worker with retries.
-
-Technical telemetry joins the same traces:
-
-- **OpenTelemetry** already in place: the connect env sets `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_HEADERS`, so the stock OTLP exporter needs no code change. See `otel-python`, `otel-ts`, `dotnet-otel`. Attach to the existing `TracerProvider`; do not replace it.
-- **Agent frameworks**: the framework skills (`langchain`, `deepagents`, `anthropic`, `crewai`, `openai-agents`, `ts-*`, `dotnet-semantic-kernel`) add model and tool span metadata without changing routing. Do not let two integrations record the same model call.
-- **Sentry** already in place: point it at `SENTRY_DSN` (see `sentry`). Do not add Sentry just for axonpush.
-- **Logs**: `logging`, `loguru`, `structlog`, `pino`, `winston`, `console` forward structured diagnostics. They do not replace observations.
-
-Pass `trace_id`/`span_id` on observations (the SDK binds the current trace when there is one) so the workspace timeline links to traces.
-
-## 7. Verify and report
-
-Send one test observation from the app, then confirm it in `workspaces_catalog` and, for business state, in `activity_entities` or `activity_timeline`. `observations_receipt` shows storage and projection separately; an accepted request is not proof of projection. Check `activity_health` for freshness and undeclared attributes; the ingest report's `dropped` lists keys the dictionary does not declare.
-
-Report per boundary: `verified`, `wired but unverified`, or `gap`, with the workspace, active revision, environment and any personal attributes the user acknowledged. Do not deploy, commit or publish templates unless the user asked.
-
-## Fallback without MCP
-
-If MCP cannot be connected and the user only wants framework or OTLP tracing, `helpers/login.sh` signs in through the browser and returns an API key and tenant id, and `helpers/api.sh` lists or creates apps and channels and publishes or lists test events. This path does not build a workspace; say so.
+Report changed files, local test results, workspace/environment, activated version
+if any, publisher/source binding and each boundary as verified, wired but
+unverified, or blocked. Label synthetic cases. Do not commit, deploy or send
+outreach unless the user requested it.
