@@ -65,6 +65,20 @@ or successful function call alone does not establish a persisted provider record
 Prefer opaque IDs and bounded fields; avoid raw conversations and unnecessary
 personal information. Keep provider credentials in the customer's application.
 
+## Attribute work to the authenticated customer
+
+Inspect the application's authentication boundary and stable customer/account IDs.
+Keep profile `identify()` updates separate from request context. Use TypeScript
+`withContext`, Python `with_context` or .NET `BeginContext` with explicit subjects,
+workspace/environment and declared per-event reference mappings. Capture the
+allowlisted context when enqueueing work and restore it in the worker. Do not
+use the user ID as a case ID, trust arbitrary customer headers as authentication,
+or treat customer attribution as permission to approve actions. Generate hooks
+that publish through the scoped publisher and preserve the same verifier.
+Validate with two concurrent synthetic customers and a queued job in development.
+See https://docs.axonpush.xyz/customer-attribution; inspect the installed SDK
+version before using new helpers. Never claim new helpers exist in an older SDK.
+
 ## Implement and test locally
 
 Save the contract in the repository. Use the installed, version-pinned CLI to
