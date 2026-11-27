@@ -11,8 +11,16 @@ permissions:
 jobs:
   release:
     name: Create GitHub release
-    runs-on: ubuntu-latest
+    runs-on: vantible-runner
     steps:
+      - name: Ensure GitHub CLI
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends gh
+          fi
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0

@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint helpers and SKILL.md frontmatter
-    runs-on: ubuntu-latest
+    runs-on: vantible-runner
     steps:
       - uses: actions/checkout@v4
 
