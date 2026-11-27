@@ -15,4 +15,4 @@ steps:
 - name: lint
   image: localhost/woodpecker/toolbox:personal-3
   commands:
-  - timeout --kill-after=30s 360m bash .woodpecker/scripts/ci-lint.sh
+  - timeout --kill-after=30s 10m bash .woodpecker/scripts/ci-lint.sh

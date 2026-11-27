@@ -14,16 +14,13 @@ export GITHUB_ENV="$RUNNER_TEMP/environment" GITHUB_OUTPUT="$RUNNER_TEMP/output"
 touch "$GITHUB_ENV" "$GITHUB_OUTPUT"
 export MISE_TRUSTED_CONFIG_PATHS="$CI_WORKSPACE"
 
-printf '%s\n' 'Install shellcheck and yq'
-(
-  cd .
-sudo apt-get update
-sudo apt-get install -y shellcheck
-sudo wget -qO /usr/local/bin/yq \
-  https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-sudo chmod +x /usr/local/bin/yq
+# Shellcheck is supplied by the toolbox; mise verifies and caches yq's release.
+command -v shellcheck >/dev/null
+if [ "${WOODPECKER_TOOLS_READY:-}" != 1 ]; then
+  export WOODPECKER_TOOLS_READY=1
+  exec mise exec yq@latest -- bash "$0"
+fi
 yq --version
-)
 
 printf '%s\n' 'Shellcheck helpers'
 (
