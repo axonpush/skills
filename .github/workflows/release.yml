@@ -11,7 +11,7 @@ permissions:
 jobs:
   release:
     name: Create GitHub release
-    runs-on: vantible-runner
+    runs-on: ubuntu-24.04
     steps:
       - name: Ensure GitHub CLI
         timeout-minutes: 5
